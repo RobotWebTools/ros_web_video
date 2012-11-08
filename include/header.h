@@ -12,10 +12,16 @@
 #define HTTP_SERVER3_HEADER_H
 
 #include <string>
+
+namespace ros_http_video_streamer
+{
+
 struct header
 {
   std::string name;
   std::string value;
 };
+
+} // ros_http_video_streamer
 
 #endif // HTTP_SERVER3_HEADER_HPP

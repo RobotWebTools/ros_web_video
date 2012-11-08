@@ -16,6 +16,9 @@
 #include <boost/asio.hpp>
 #include "header.h"
 
+namespace ros_http_video_streamer
+{
+
 /// A reply to be sent to a client.
 struct reply
 {
@@ -54,5 +57,7 @@ struct reply
   /// Get a stock reply.
   static reply stock_reply(status_type status);
 };
+
+} // ros_http_video_streamer
 
 #endif // HTTP_SERVER3_REPLY_HPP

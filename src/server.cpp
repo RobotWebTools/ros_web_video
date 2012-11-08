@@ -14,6 +14,9 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
+namespace ros_http_video_streamer
+{
+
 server::server(const ServerConfiguration& server_conf, std::size_t thread_pool_size)
   : server_conf_(server_conf),
     thread_pool_size_(thread_pool_size),
@@ -69,4 +72,6 @@ void server::handle_accept(const boost::system::error_code& e)
           boost::asio::placeholders::error));
   }
 }
+
+} // ros_http_video_streamer
 

@@ -38,6 +38,9 @@
 // a large queue might increase the latency on the video stream
 #define IMAGE_BUFFER_SIZE 1
 
+namespace ros_http_video_streamer
+{
+
 ImageSubscriber::ImageSubscriber(const std::string& topic) :
     topic_(topic),
     nh(""),
@@ -97,3 +100,4 @@ void ImageSubscriber::getImageFromQueue(sensor_msgs::ImageConstPtr& frame)
   }
 }
 
+} // ros_http_video_streamer

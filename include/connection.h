@@ -57,6 +57,9 @@
 
 //#define HTTP_TRANSFER_ENCODING
 
+namespace ros_http_video_streamer
+{
+
 /// Represents a single connection from a client.
 class connection
   : public boost::enable_shared_from_this<connection>,
@@ -144,5 +147,7 @@ private:
 
 typedef boost::shared_ptr<connection> connection_ptr;
 
+
+} // ros_http_video_streamer
 
 #endif // HTTP_SERVER3_CONNECTION_HPP

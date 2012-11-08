@@ -47,6 +47,8 @@
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
 
+namespace ros_http_video_streamer
+{
 
   //////////////////////////////////////////////////////////
   // This class subscribes to a ROS image publisher
@@ -90,5 +92,6 @@
 
   };
 
+} // ros_http_video_streamer
 
 #endif /* ROS_IMAGE_SUBSCRIBE_H_ */

@@ -14,6 +14,9 @@
 #include <boost/logic/tribool.hpp>
 #include <boost/tuple/tuple.hpp>
 
+namespace ros_http_video_streamer
+{
+
 struct request;
 
 /// Parser for incoming requests.
@@ -86,5 +89,7 @@ private:
     expecting_newline_3
   } state_;
 };
+
+} // ros_http_video_streamer
 
 #endif // HTTP_SERVER3_REQUEST_PARSER_HPP

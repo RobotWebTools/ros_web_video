@@ -48,6 +48,9 @@
 
 #include <sensor_msgs/image_encodings.h>
 
+namespace ros_http_video_streamer
+{
+
 class FFMPEGEncoder
 {
 public:
@@ -139,5 +142,7 @@ private:
   FFMPEG_Wrapper* ffmpeg_;
 
 };
+
+} // ros_http_video_streamer
 
 #endif /* FFMPEG_ENCODER_H_ */

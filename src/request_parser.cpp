@@ -11,6 +11,9 @@
 #include "request_parser.h"
 #include "request.h"
 
+namespace ros_http_video_streamer
+{
+
 request_parser::request_parser()
   : state_(method_start)
 {
@@ -318,3 +321,5 @@ bool request_parser::is_digit(int c)
 {
   return c >= '0' && c <= '9';
 }
+
+} // ros_http_video_streamer

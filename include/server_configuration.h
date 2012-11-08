@@ -37,6 +37,9 @@
 
 #include <string>
 
+namespace ros_http_video_streamer
+{
+
 struct ServerConfiguration
 {
   ServerConfiguration() :
@@ -60,5 +63,7 @@ struct ServerConfiguration
   bool depth_encoding_;
 
 };
+
+} // ros_http_video_streamer
 
 #endif /* SERVER_CONFIGURATION_H_ */

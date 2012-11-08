@@ -53,6 +53,9 @@
 
 // include ffmpeg C headers
 
+namespace ros_http_video_streamer
+{
+
 extern "C"
 {
         #include <libavcodec/avcodec.h>
@@ -62,6 +65,7 @@ extern "C"
         #include <libswscale/swscale.h>
         #include "libavutil/opt.h"
 }
+
 
 FFMPEG_Wrapper::FFMPEG_Wrapper() :
     ffmpeg_codec_(0),
@@ -403,3 +407,4 @@ void FFMPEG_Wrapper::get_trailer(std::vector<uint8_t>& trailer)
   }
 }
 
+} // ros_http_video_streamer

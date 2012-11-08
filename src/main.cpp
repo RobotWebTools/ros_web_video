@@ -42,16 +42,15 @@
 
 #include "server_configuration.h"
 
-
 int main(int argc, char* argv[])
 {
   ros::init(argc, argv, "ImageTopicStreamer");
 
   // Default server configuration
-  ServerConfiguration server_conf;
+  ros_http_video_streamer::ServerConfiguration server_conf;
 
   // ROS parameters
-  ros::NodeHandle priv_nh_;
+  ros::NodeHandle priv_nh_("~");
   priv_nh_.param<std::string>("host", server_conf.address_, server_conf.address_);
   priv_nh_.param<std::string>("port", server_conf.port_, server_conf.port_);
 
@@ -64,8 +63,8 @@ int main(int argc, char* argv[])
   {
 
     // Run server in background thread.
-    server s(server_conf, 10);
-    boost::thread t(boost::bind(&server::run, &s));
+    ros_http_video_streamer::server s(server_conf, 10);
+    boost::thread t(boost::bind(&ros_http_video_streamer::server::run, &s));
 
     ros::spin();
 

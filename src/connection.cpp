@@ -53,6 +53,8 @@
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
 
+namespace ros_http_video_streamer
+{
 
 namespace misc_strings {
 
@@ -568,3 +570,5 @@ bool connection::urlDecode(const std::string& in, std::string& out)
   }
   return true;
 }
+
+} // ros_http_video_streamer

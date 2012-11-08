@@ -45,6 +45,9 @@
 
 namespace enc = sensor_msgs::image_encodings;
 
+namespace ros_http_video_streamer
+{
+
 FFMPEGEncoder::FFMPEGEncoder(const std::string& refID,
                              const std::string& topic,
                              const std::string& codec,
@@ -465,3 +468,5 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
   }
 
 }
+
+} // ros_http_video_streamer

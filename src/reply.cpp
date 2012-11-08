@@ -12,6 +12,9 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 
+namespace ros_http_video_streamer
+{
+
 namespace status_strings {
 
 const std::string ok =
@@ -248,3 +251,5 @@ reply reply::stock_reply(reply::status_type status)
   rep.headers[1].value = "text/html";
   return rep;
 }
+
+} // ros_http_video_streamer

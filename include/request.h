@@ -14,6 +14,10 @@
 #include <string>
 #include <vector>
 #include "header.h"
+
+namespace ros_http_video_streamer
+{
+
 /// A request received from a client.
 struct request
 {
@@ -23,5 +27,7 @@ struct request
   int http_version_minor;
   std::vector<header> headers;
 };
+
+} // ros_http_video_streamer
 
 #endif // HTTP_SERVER3_REQUEST_HPP

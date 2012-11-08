@@ -22,6 +22,9 @@
 
 #include "server_configuration.h"
 
+namespace ros_http_video_streamer
+{
+
 /// The top-level class of the HTTP server.
 class server
   : private boost::noncopyable
@@ -61,5 +64,7 @@ private:
 
   //std::vector<boost::shared_ptr<boost::thread> > connection_threads_;
 };
+
+} // ros_http_video_streamer
 
 #endif // HTTP_SERVER3_SERVER_HPP

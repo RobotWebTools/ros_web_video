@@ -49,6 +49,10 @@
 
 #define CODER_BUF_SIZE 50000
 
+namespace ros_http_video_streamer
+{
+
+
 class AVCodec;
 class AVOutputFormat;
 class AVCodecContext;
@@ -109,6 +113,8 @@ private:
   struct SwsContext *ffmpeg_sws_ctx_;
 
 };
+
+} // ros_http_video_streamer
 
 #endif
 

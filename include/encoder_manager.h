@@ -44,6 +44,9 @@
 
 //#define SHARED_ENCODERS
 
+namespace ros_http_video_streamer
+{
+
 class EncoderManager
 {
 public:
@@ -155,5 +158,8 @@ private:
   unsigned int request_counter_;
 
 };
+
+} // ros_http_video_streamer
+
 
 #endif /* ENCODING_MANAGER_H_ */
