@@ -1,0 +1,16 @@
+<package>
+  <description brief="ros_http_video_streamer">
+
+     ros_http_video_streamer
+
+  </description>
+  <author>Julius Kammerl</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/http_video_streamer</url>
+  
+    <depend package="image_transport"/>
+
+</package>
+
+
