@@ -42,6 +42,18 @@
 
 #include "server_configuration.h"
 
+void showConfig(const ros_http_video_streamer::ServerConfiguration& config)
+{
+  std::cout << "ROS Http Video Streamer" << std::endl << std::endl;
+  std::cout << "Settings:" << std::endl;
+  std::cout << "        Hostname: " << config.address_ << std::endl;
+  std::cout << "        Port: " << config.port_ << std::endl;
+  std::cout << "        Codec: " << config.codec_ << std::endl;
+  std::cout << "        Bitrate: " << config.bitrate_ << std::endl;
+  std::cout << "        Framerate: " << config.framerate_ << std::endl;
+  std::cout << "        Depth encoding: " << std::string(config.depth_encoding_ ? "yes" : "no") << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
   ros::init(argc, argv, "ROS_Http_Video_Streamer");
@@ -50,16 +62,27 @@ int main(int argc, char* argv[])
   ros_http_video_streamer::ServerConfiguration server_conf;
 
   // ROS parameters
-  ros::NodeHandle priv_nh_("");
+  ros::NodeHandle priv_nh_("~");
 
+  // read hostname from param server
   priv_nh_.param<std::string>("host", server_conf.address_, server_conf.address_);
-  priv_nh_.param<std::string>("port", server_conf.port_, server_conf.port_);
+
+  // read network port from param server
+  priv_nh_.param<int>("port", server_conf.port_, server_conf.port_);
+
+  // read default codec from param server
   priv_nh_.param<std::string>("codec", server_conf.codec_, server_conf.codec_);
+
+  // read default bitrate from param server
   priv_nh_.param<int>("bitrate", server_conf.bitrate_, server_conf.bitrate_);
+
+  // read default frame rate from param server
   priv_nh_.param<int>("framerate", server_conf.framerate_, server_conf.framerate_);
+
+  // read depth_encoding option from param server
   priv_nh_.param<bool>("depth_encoding", server_conf.depth_encoding_, server_conf.depth_encoding_);
 
-  std::cout <<  server_conf.port_ << std::endl;;
+  showConfig(server_conf);
 
   try
   {

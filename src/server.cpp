@@ -9,9 +9,12 @@
 //
 
 #include "server.h"
+
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <vector>
 
 namespace ros_http_video_streamer
@@ -26,7 +29,8 @@ server::server(const ServerConfiguration& server_conf, std::size_t thread_pool_s
 {
   // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
   boost::asio::ip::tcp::resolver resolver(io_service_);
-  boost::asio::ip::tcp::resolver::query query("0.0.0.0", server_conf_.port_);
+  boost::asio::ip::tcp::resolver::query query("0.0.0.0",
+                                              boost::lexical_cast<std::string>(server_conf.port_));
   boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
   acceptor_.open(endpoint.protocol());
   acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));

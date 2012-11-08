@@ -202,36 +202,71 @@ template<typename T>
     for (y = 0; y < height; ++y)
       for (x = 0; x < height; ++x, ++input_ptr)
       {
-        // encode depth image in rgb space
-        /*
+         //encode depth image in rgb space
+
+#ifdef DEPTH_TO_RGB_AVERAGE
+
+       uint8_t pix_val = (1.0f - std::min(1.0f, ((float)(*input_ptr) / (float)MAX_DEPTH))) * 255;
+
+       // R
+       *output_ptr = pix_val;
+       ++output_ptr;
+
+       // G
+       *output_ptr = pix_val;
+       ++output_ptr;
+
+       // B
+       *output_ptr = pix_val;
+       ++output_ptr;
+
+
+#else
          uint32_t pix_val = (*input_ptr)*1000;
 
-         // R
-         *rgb_ptr = (pix_val & 0xF)<<4;
-         pix_val >>= 4; ++output_ptr;
+         if (pix_val==0)
+           pix_val=0xFFFFFFFF;
 
-         // G
-         *output_ptr = (pix_val & 0xF)<<4;
-         pix_val >>= 4; ++output_ptr;
+         uint8_t r_pix_val = 0;
+         uint8_t g_pix_val = 0;
+         uint8_t b_pix_val = 0;
 
-         // B
-         *output_ptr = (pix_val & 0xF)<<4;
-         pix_val >>= 4; ++output_ptr;
-         */
+         uint32_t pix_mask = 1<<(12-1);
+         uint32_t rgb_mask = 1<<(8-1);
 
-        uint8_t pix_val = (1.0f - std::min(1.0f, ((float)(*input_ptr) / (float)MAX_DEPTH))) * 255;
+         while (pix_mask && rgb_mask)
+         {
+           if (pix_val&pix_mask)
+             r_pix_val |= rgb_mask;
+           pix_mask >>=1;
 
-        // R
-        *output_ptr = pix_val;
-        ++output_ptr;
+           if (pix_val&pix_mask)
+             g_pix_val |= rgb_mask;
+           pix_mask >>=1;
 
-        // G
-        *output_ptr = pix_val;
-        ++output_ptr;
+           if (pix_val&pix_mask)
+             b_pix_val |= rgb_mask;
+           pix_mask >>=1;
 
-        // B
-        *output_ptr = pix_val;
-        ++output_ptr;
+           rgb_mask>>=1;
+         }
+
+         if (rgb_mask)
+         {
+           r_pix_val |= rgb_mask-1;
+           g_pix_val |= rgb_mask-1;
+           b_pix_val |= rgb_mask-1;
+         }
+
+         *output_ptr = r_pix_val;
+         ++output_ptr;
+
+         *output_ptr = g_pix_val;
+         ++output_ptr;
+
+         *output_ptr = b_pix_val;
+         ++output_ptr;
+#endif
       }
 
   }
@@ -331,6 +366,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
         // change resolution of input frame
         crop_frame(frame, frame_resized, RAW_DEPTH_IMAGE_RESOLUTION, RAW_DEPTH_IMAGE_RESOLUTION);
 
+        frame.reset();
         frame = frame_resized;
       }
 

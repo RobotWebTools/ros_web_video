@@ -44,7 +44,7 @@ struct ServerConfiguration
 {
   ServerConfiguration() :
       address_("mbl.willowgarage.com"),
-      port_("8888"),
+      port_(8888),
       codec_("webm"),
       bitrate_(100000),
       framerate_(31),
@@ -53,13 +53,26 @@ struct ServerConfiguration
   {
   }
 
+  ////////////////////////////
+  // Server configuration
+  ////////////////////////////
+
+  // hostname/network device to listen for http requests
   std::string address_;
-  std::string port_;
+  // network port
+  int port_;
 
+  ////////////////////////////
+  // Codec configuration
+  ////////////////////////////
+
+  // codec name
   std::string codec_;
+  // maximum bit rate
   int bitrate_;
+  // maximum frame rate
   int framerate_;
-
+  // transform depth stream to work with WebGL-based pointcloud streaming
   bool depth_encoding_;
 
 };

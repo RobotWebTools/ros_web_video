@@ -90,8 +90,8 @@ void ImageSubscriber::getImageFromQueue(sensor_msgs::ImageConstPtr& frame)
     // if queue not empty..
     if (frame_queue_.size())
     {
-      if (frame_queue_.size() > IMAGE_BUFFER_SIZE)
-        frame_queue_.resize(IMAGE_BUFFER_SIZE);
+      while (frame_queue_.size() > IMAGE_BUFFER_SIZE)
+        frame_queue_.pop_back();
 
       // pop frame from back of queue
       frame = frame_queue_.back();

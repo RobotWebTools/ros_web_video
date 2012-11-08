@@ -36,6 +36,8 @@
 #ifndef FFMPEG_ENCODER_H_
 #define FFMPEG_ENCODER_H_
 
+#define DEPTH_TO_RGB_AVERAGE
+
 #include <boost/thread.hpp>
 
 #include <iostream>

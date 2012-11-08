@@ -198,31 +198,34 @@ void connection::streamingWorkerThread( const std::string& topic,
    boost::asio::write(socket_, buffers);
    ROS_DEBUG("Video header sent (%d bytes)", (int) header.size());
 
-     while (do_streaming_)
-     {
-         buffers.clear();
+    std::vector < uint8_t > packet;
 
-         std::vector<uint8_t> packet;
-         image_encoder->getVideoPacket(packet);
-         ROS_DEBUG("Video packet sent (%d bytes)", (int) packet.size());
+    while (do_streaming_)
+    {
+      buffers.clear();
+      packet.clear();
+
+      image_encoder->getVideoPacket(packet);
+      ROS_DEBUG("Video packet sent (%d bytes)", (int) packet.size());
 
 #ifdef HTTP_TRANSFER_ENCODING
-         sprintf(hexSize, "%X", (unsigned int)packet.size());
-         buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
-         buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+      sprintf(hexSize, "%X", (unsigned int)packet.size());
+      buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
+      buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 #endif
 
-         buffers.push_back(boost::asio::buffer(packet));
+      buffers.push_back(boost::asio::buffer(packet));
 #ifdef HTTP_TRANSFER_ENCODING
-         buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+      buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 #endif
 
-         boost::asio::write(socket_, buffers);
-     }
-   } catch (const boost::system::system_error& err)
-   {
-     do_streaming_ = false;
-   }
+      boost::asio::write(socket_, buffers);
+    }
+  }
+  catch (const boost::system::system_error& err)
+  {
+    do_streaming_ = false;
+  }
 
    encoder_manager_.unsubscribe(image_encoder->getRefID());
 
@@ -308,7 +311,7 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
                   "<div id=\"movie\">"
                           "<video src=\"http://";
 
-  reply_.content += server_conf_.address_+":"+config.port_;
+  reply_.content += server_conf_.address_+":"+boost::lexical_cast<std::string>(config.port_);
   reply_.content += STREAM_PATH;
   reply_.content += image_topic;
   reply_.content +="?enc=";
