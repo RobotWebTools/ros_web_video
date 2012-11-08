@@ -44,20 +44,22 @@
 
 int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "ImageTopicStreamer");
+  ros::init(argc, argv, "ROS_Http_Video_Streamer");
 
   // Default server configuration
   ros_http_video_streamer::ServerConfiguration server_conf;
 
   // ROS parameters
-  ros::NodeHandle priv_nh_("~");
+  ros::NodeHandle priv_nh_("");
+
   priv_nh_.param<std::string>("host", server_conf.address_, server_conf.address_);
   priv_nh_.param<std::string>("port", server_conf.port_, server_conf.port_);
-
   priv_nh_.param<std::string>("codec", server_conf.codec_, server_conf.codec_);
   priv_nh_.param<int>("bitrate", server_conf.bitrate_, server_conf.bitrate_);
   priv_nh_.param<int>("framerate", server_conf.framerate_, server_conf.framerate_);
   priv_nh_.param<bool>("depth_encoding", server_conf.depth_encoding_, server_conf.depth_encoding_);
+
+  std::cout <<  server_conf.port_ << std::endl;;
 
   try
   {
