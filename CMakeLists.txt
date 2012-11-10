@@ -56,7 +56,7 @@ set_property(TARGET vpx PROPERTY
 rosbuild_add_executable(${PROJECT_NAME}  src/ffmpeg_wrapper.cpp 
                                          src/server.cpp
                                          src/connection.cpp
-                                         src/main.cpp
+                                         src/topic_streamer.cpp
                                          src/reply.cpp
                                          src/request_parser.cpp
                                          src/image_subscriber.cpp

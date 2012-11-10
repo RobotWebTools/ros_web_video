@@ -113,9 +113,7 @@ private:
 
   // method to crop/resize input frame
   void createPointCloudDataFrame(sensor_msgs::ImageConstPtr input,
-                             sensor_msgs::ImagePtr output,
-                             std::size_t width,
-                             std::size_t height);
+                                 sensor_msgs::ImagePtr output);
 
   // encoding thread running?
   bool doEncoding_;

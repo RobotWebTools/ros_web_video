@@ -367,21 +367,6 @@ src/image_subscriber.s:
 .PHONY : src/image_subscriber.s
 
 # target to build an object file
-src/main.o:
-	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/main.o
-.PHONY : src/main.o
-
-# target to preprocess a source file
-src/main.i:
-	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/main.i
-.PHONY : src/main.i
-
-# target to generate assembly for a file
-src/main.s:
-	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/main.s
-.PHONY : src/main.s
-
-# target to build an object file
 src/reply.o:
 	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/reply.o
 .PHONY : src/reply.o
@@ -426,6 +411,21 @@ src/server.s:
 	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/server.s
 .PHONY : src/server.s
 
+# target to build an object file
+src/topic_streamer.o:
+	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/topic_streamer.o
+.PHONY : src/topic_streamer.o
+
+# target to preprocess a source file
+src/topic_streamer.i:
+	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/topic_streamer.i
+.PHONY : src/topic_streamer.i
+
+# target to generate assembly for a file
+src/topic_streamer.s:
+	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/topic_streamer.s
+.PHONY : src/topic_streamer.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -462,9 +462,6 @@ help:
 	@echo "... src/image_subscriber.o"
 	@echo "... src/image_subscriber.i"
 	@echo "... src/image_subscriber.s"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
 	@echo "... src/reply.o"
 	@echo "... src/reply.i"
 	@echo "... src/reply.s"
@@ -474,6 +471,9 @@ help:
 	@echo "... src/server.o"
 	@echo "... src/server.i"
 	@echo "... src/server.s"
+	@echo "... src/topic_streamer.o"
+	@echo "... src/topic_streamer.i"
+	@echo "... src/topic_streamer.s"
 .PHONY : help
 
 

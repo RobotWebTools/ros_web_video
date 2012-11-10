@@ -344,112 +344,100 @@ void FFMPEGEncoder::cropFrame(sensor_msgs::ImageConstPtr input,
 }
 
 // encapsulate depth, point mask & color information in a single frame
-void createPointCloudDataFrame(sensor_msgs::ImageConstPtr input,
-                               sensor_msgs::ImagePtr output,
-                               std::size_t width,
-                               std::size_t height)
+void FFMPEGEncoder::createPointCloudDataFrame(sensor_msgs::ImageConstPtr input,
+                                              sensor_msgs::ImagePtr output)
 {
   // input and output size
-  const std::size_t output_width = width;
-  const std::size_t output_height = height;
+  const std::size_t output_width = input->width*2;
+  const std::size_t output_height = input->height;
 
   const std::size_t input_width = input->width;
   const std::size_t input_height = input->height;
 
-  const std::size_t pixel_depth = input->step / input_width;
-
-  std::size_t x, y, lastpos, len;
+  std::size_t y, len;
 
   // assign field of output sensor_msgs::ImagePtr
-  output->width = output_width*2;
-  output->height = output_heigh*2t;
+  output->width = output_width;
+  output->height = output_height;
 
   output->encoding = input->encoding;
   output->is_bigendian = input->is_bigendian;
 
-  output->step = output->width * pixel_depth;
+  output->step = output->width * (input->step / input_width);
   // allocate data
-  output->data.resize(output_width * output_height * pixel_depth, 0);
+  output->data.resize(output_width * output_height * output->step, 0);
 
-  // calculate memory steps
-  const std::size_t source_y_step = input_width * pixel_depth;
-  const std::size_t destination_y_step = output_width * 2 * pixel_depth;
+  const float* input_ptr = (const float*)&input->data[0];
+  float* output_ptr = (float*)&output->data[0];
 
-  float* input_ptr = (float)&input->data[0];
-  float* output_ptr = (float)&input->data[0];
-
-  for (y = 0; y < height; ++y, input_ptr+=source_y_step)
+  for (y = 0; y < input_height; ++y, input_ptr+=input_width, output_ptr+=output_width)
   {
-    // fill holes and create point mask
-    uint8_t fillVal;
+    const float* in_x_ptr = input_ptr;
+    float* out_x_ptr = output_ptr;
 
-    float* x_ptr = input_ptr;
-    float* x_end_ptr = input_ptr+source_y_step;
+    float leftVal = 0.0f;
 
-    while (x_ptr < x_end_ptr)
+    const float* in_x_end_ptr = input_ptr+input_width;
+
+    while (in_x_ptr < in_x_end_ptr)
     {
       len = 0;
-      float* lastpos_ptr = x_ptr;
-      while ((isnan(*x_ptr) || (*x_ptr==0) ) && (x_ptr < x_end_ptr))
+      const float* lastpos_ptr = in_x_ptr;
+      while ((isnan(*in_x_ptr) || (*in_x_ptr==0) ) && (in_x_ptr < in_x_end_ptr))
       {
-        ++x_ptr;
+        ++in_x_ptr;
         ++len;
       }
       if (len>0)
       {
         // we found a hole
 
-        // find valid pixel on left side of hole
-        float leftVal = *lastpos_ptr;
-        if (isnan(leftVal))
-        {
-          leftVal = 0.0f;
-        }
-
         // find valid pixel on right side of hole
         float rightVal;
-        if (x_ptr < x_end_ptr)
+        if (in_x_ptr < in_x_end_ptr)
         {
-          rightVal = *x_ptr;
+          rightVal = *in_x_ptr;
         }
         else
         {
           rightVal = leftVal;
         }
 
+        // find valid pixel on left side of hole
+        if (isnan(leftVal) || (leftVal==0.0f))
+        {
+          leftVal = rightVal;
+        }
+
+
         float incVal = (rightVal-leftVal)/(float)len;
         float fillVal = leftVal;
-        float* fill_ptr;
+        const float* fill_ptr;
 
-        for (fill_ptr = lastpos_ptr; fill_ptr < x_ptr; ++fill_ptr)
+        for (fill_ptr = lastpos_ptr; fill_ptr < in_x_ptr; ++fill_ptr)
         {
-          *fill_ptr = fillVal;
+          *out_x_ptr = fillVal;
+          ++out_x_ptr;
+
           fillVal += incVal;
+
         }
+
+        leftVal =  rightVal;
       }
       else
       {
-        ++x_ptr;
+        leftVal =  *in_x_ptr;
+
+        *out_x_ptr = *in_x_ptr;
+        ++in_x_ptr;
+        ++out_x_ptr;
       }
+
     }
 
   }
 
-
-
-  // calculate memory steps
-  const std::size_t source_line_size = pixel_depth * (width_x - top_x);
-  const std::size_t source_y_step = input_width * pixel_depth;
-  const std::size_t destination_y_step = output_width * pixel_depth;
-
-  const uint8_t* source_ptr = &input->data[(top_y * input_width + top_x) * pixel_depth];
-  uint8_t* dest_ptr = &output->data[((top_y - top_bottom_corner) * output_width + top_x - left_right_corner) * pixel_depth];
-
-  // copy image data
-  for (y = top_y; y < width_y; ++y, source_ptr += source_y_step, dest_ptr += destination_y_step)
-  {
-    memcpy(dest_ptr, source_ptr, source_line_size);
-  }
 }
 
 void FFMPEGEncoder::videoEncodingWorkerThread()
@@ -479,7 +467,11 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
         sensor_msgs::ImagePtr frame_resized = sensor_msgs::ImagePtr(new sensor_msgs::Image());
 
         // change resolution of input frame
-        crop_frame(frame, frame_resized, RAW_DEPTH_IMAGE_RESOLUTION, RAW_DEPTH_IMAGE_RESOLUTION);
+        cropFrame(frame, frame_resized, RAW_DEPTH_IMAGE_RESOLUTION, RAW_DEPTH_IMAGE_RESOLUTION);
+
+      //  sensor_msgs::ImagePtr frame_with_mask = sensor_msgs::ImagePtr(new sensor_msgs::Image());
+
+     //   createPointCloudDataFrame(frame_resized, frame_with_mask);
 
         frame.reset();
         frame = frame_resized;
