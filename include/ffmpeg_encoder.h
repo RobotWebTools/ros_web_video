@@ -104,10 +104,16 @@ private:
                                 std::vector<uint8_t>& output);
 
   // method to crop/resize input frame
-  void crop_frame(sensor_msgs::ImageConstPtr input,
+  void cropFrame(sensor_msgs::ImageConstPtr input,
                   sensor_msgs::ImagePtr output,
                   std::size_t width,
                   std::size_t height);
+
+  // method to crop/resize input frame
+  void createPointCloudDataFrame(sensor_msgs::ImageConstPtr input,
+                             sensor_msgs::ImagePtr output,
+                             std::size_t width,
+                             std::size_t height);
 
   // encoding thread running?
   bool doEncoding_;
