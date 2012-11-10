@@ -51,8 +51,10 @@ namespace ros_http_video_streamer
 FFMPEGEncoder::FFMPEGEncoder(const std::string& refID,
                              const std::string& topic,
                              const std::string& codec,
-                             unsigned bitrate,
-                             unsigned framerate,
+                             unsigned int bitrate,
+                             unsigned int framerate,
+                             int framewidth,
+                             int frameheight,
                              bool depth_rgb_encoding) :
     doEncoding_(true),
     refID_(refID),
@@ -60,6 +62,8 @@ FFMPEGEncoder::FFMPEGEncoder(const std::string& refID,
     codec_(codec),
     bitrate_(bitrate),
     framerate_(framerate),
+    framewidth_(framewidth),
+    frameheight_(frameheight),
     depth_rgb_encoding_(depth_rgb_encoding),
     subscriber_(topic),
     encoding_queue_thread_(0),
@@ -343,7 +347,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
 {
   // time stamps used to control the encoder rate
   unsigned int milisec_used;
-  const unsigned int milisec_per_frame = 1000 / std::max(10u, framerate_);
+  const unsigned int milisec_per_frame = 1000 / framerate_;
 
   while (doEncoding_)
   {
@@ -354,6 +358,8 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
 
     // get frame from ROS iamge subscriber
     subscriber_.getImageFromQueue(frame);
+
+    ROS_DEBUG("Encoding triggered..");
 
     if (frame)
     {
@@ -376,7 +382,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
         ffmpeg_ = new FFMPEG_Wrapper();
 
         // first input frame defines resolution
-        ffmpeg_->init(codec_, frame->width, frame->height, bitrate_, framerate_);
+        ffmpeg_->init(codec_, frame->width, frame->height, framewidth_, frameheight_, bitrate_, framerate_);
         {
           {
             boost::lock_guard<boost::mutex> lock(encoding_header_mutex_);

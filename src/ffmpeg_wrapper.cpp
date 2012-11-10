@@ -78,7 +78,11 @@ FFMPEG_Wrapper::FFMPEG_Wrapper() :
     ffmpeg_frame_(0),
     ffmpeg_video_pts_(0.0),
     ffmpeg_render_buf_(0),
-    ffmpeg_sws_ctx_(0)
+    ffmpeg_sws_ctx_(0),
+    input_width_(-1),
+    input_height_(-1),
+    output_width_(-1),
+    output_height_(-1)
 {
 }
 
@@ -88,11 +92,24 @@ FFMPEG_Wrapper::~FFMPEG_Wrapper()
 }
 
 void FFMPEG_Wrapper::init(const std::string& codec_name,
-                          unsigned int width,
-                          unsigned int height,
+                          int input_width,
+                          int input_height,
+                          int output_width,
+                          int output_height,
                           unsigned int bitrate,
                           unsigned int framerate)
 {
+
+  input_width_ = input_width;
+  input_height_ = input_height;
+  output_width_ = output_width;
+  output_height_ = output_height;
+
+  if (output_width_<0)
+    output_width_ = input_width_;
+
+  if (output_height_<0)
+    output_height_ = input_height_;
 
   /* register all the codecs */
   avcodec_register_all();
@@ -139,25 +156,41 @@ void FFMPEG_Wrapper::init(const std::string& codec_name,
 
     ffmpeg_codec_context_->codec_id = ffmpeg_output_format_->video_codec;
     ffmpeg_codec_context_->bit_rate = bitrate;
-    ffmpeg_codec_context_->width = width;
-    ffmpeg_codec_context_->height = height;
+
+    ffmpeg_codec_context_->width = output_width_;
+    ffmpeg_codec_context_->height = output_height_;
     ffmpeg_codec_context_->delay = 0;
-    ffmpeg_codec_context_->time_base.den = framerate;
+
+    ffmpeg_codec_context_->time_base.den = framerate+5;
     ffmpeg_codec_context_->time_base.num = 1;
     ffmpeg_codec_context_->gop_size = 60; /* emit one intra ffmpeg_frame_ every twelve frames at most */
     ffmpeg_codec_context_->pix_fmt = PIX_FMT_YUV420P;
     ffmpeg_codec_context_->max_b_frames = 0;
-    ffmpeg_codec_context_->rc_buffer_size = 0;
 
-   // av_opt_set_double(ffmpeg_codec_context_->priv_data, "max-intra-rate", 90, 0);
     av_opt_set(ffmpeg_codec_context_->priv_data, "quality", "realtime", 0);
-  //  av_opt_set_int(ffmpeg_codec_context_->priv_data, "deadline", 1, 0);
-    av_opt_set_int(ffmpeg_codec_context_->priv_data, "rc_lookahead", 1, 0);
-    av_opt_set(ffmpeg_codec_context_->priv_data, "lag", "0", 0);
-    av_opt_set(ffmpeg_codec_context_->priv_data, "zerolatency", "1", 0);
-    //av_opt_set(ffmpeg_codec_context_->priv_data, "vp8flags", "error_resilient", 0);
-    av_opt_set(ffmpeg_codec_context_->priv_data, "vp8opts",
-    "no-mbtree:sliced-threads:error_resilient:sync-lookahead=0", 0);
+
+    av_opt_set(ffmpeg_codec_context_->priv_data, "deadline", "1", 0);
+    av_opt_set(ffmpeg_codec_context_->priv_data, "auto-alt-ref", "0", 0);
+
+    // lag in frames
+    av_opt_set(ffmpeg_codec_context_->priv_data, "lag-in-frames", "1", 0);
+    av_opt_set(ffmpeg_codec_context_->priv_data, "rc_lookahead", "1", 0);
+
+    // enable error-resilient coding
+    av_opt_set(ffmpeg_codec_context_->priv_data, "error-resilient", "1", 0);
+
+    // buffer size of rate controller (length: rc_buffer_size/bitrate * 1000) ms
+   // ffmpeg_codec_context_->rc_buffer_size = 1;//bitrate/3;
+    // prebuffering at decoder
+    //ffmpeg_codec_context_->rc_initial_buffer_occupancy = 1;//bitrate/3;
+    // buffer agressivity
+    ffmpeg_codec_context_->rc_buffer_aggressivity = 0.5;
+
+    // Quality settings
+    //ffmpeg_codec_context_->qmin = 50;
+    //ffmpeg_codec_context_->qmax = 62;
+
+     //ffmpeg_codec_context_->frame_skip_threshold = 100;
 
     /* Some formats want stream headers to be separate. */
     if (ffmpeg_format_context_->oformat->flags & AVFMT_GLOBALHEADER)
@@ -186,7 +219,7 @@ void FFMPEG_Wrapper::init(const std::string& codec_name,
       }
 
       /* Allocate the encoded raw picture. */
-      ret = avpicture_alloc(ffmpeg_dst_picture_, ffmpeg_codec_context_->pix_fmt, ffmpeg_codec_context_->width, ffmpeg_codec_context_->height);
+      ret = avpicture_alloc(ffmpeg_dst_picture_, ffmpeg_codec_context_->pix_fmt, output_width_, output_height_);
       if (ret < 0) {
           fprintf(stderr, "Could not allocate picture\n");
           exit(1);
@@ -195,7 +228,7 @@ void FFMPEG_Wrapper::init(const std::string& codec_name,
       /* If the output format is not YUV420P, then a temporary YUV420P
        * picture is needed too. It is then converted to the required
        * output format. */
-          ret = avpicture_alloc(ffmpeg_src_picture_, AV_PIX_FMT_RGB24, ffmpeg_codec_context_->width, ffmpeg_codec_context_->height);
+          ret = avpicture_alloc(ffmpeg_src_picture_, AV_PIX_FMT_RGB24, input_width_, input_height_);
           if (ret < 0) {
               fprintf(stderr, "Could not allocate temporary picture\n");
               exit(1);
@@ -268,13 +301,13 @@ template <int CODING_FORMAT>
 void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& encoded_frame)
 {
 
-  avpicture_fill(ffmpeg_src_picture_, image_data,  (AVPixelFormat)CODING_FORMAT, ffmpeg_codec_context_->width,  ffmpeg_codec_context_->height);
+  avpicture_fill(ffmpeg_src_picture_, image_data,  (AVPixelFormat)CODING_FORMAT, input_width_,  input_height_);
 
   // get format conversion
   if (!ffmpeg_sws_ctx_) {
     static int sws_flags = SWS_BICUBIC;
-      ffmpeg_sws_ctx_ = sws_getContext(ffmpeg_codec_context_->width, ffmpeg_codec_context_->height, (AVPixelFormat)CODING_FORMAT,
-                               ffmpeg_codec_context_->width, ffmpeg_codec_context_->height, ffmpeg_codec_context_->pix_fmt,
+      ffmpeg_sws_ctx_ = sws_getContext(input_width_, input_height_, (AVPixelFormat)CODING_FORMAT,
+                                       output_width_, output_height_, ffmpeg_codec_context_->pix_fmt,
                                 sws_flags, NULL, NULL, NULL);
       if (!ffmpeg_sws_ctx_) {
           fprintf(stderr,
@@ -283,7 +316,9 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
       }
   }
 
-  sws_scale(ffmpeg_sws_ctx_,  (const uint8_t * const *)ffmpeg_src_picture_->data, ffmpeg_src_picture_->linesize, 0, ffmpeg_codec_context_->height, ffmpeg_dst_picture_->data, ffmpeg_dst_picture_->linesize);
+  sws_scale(ffmpeg_sws_ctx_,
+            (const uint8_t * const *)ffmpeg_src_picture_->data,
+            ffmpeg_src_picture_->linesize, 0, input_height_, ffmpeg_dst_picture_->data, ffmpeg_dst_picture_->linesize);
 
   if (ffmpeg_video_st_)
       ffmpeg_video_pts_ = (double)ffmpeg_video_st_->pts.val * ffmpeg_video_st_->time_base.num /
