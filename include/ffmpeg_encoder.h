@@ -62,8 +62,10 @@ public:
   FFMPEGEncoder(const std::string& refID,
                 const std::string& topic,
                 const std::string& codec,
-                unsigned bitrate,
-                unsigned framerate,
+                unsigned int bitrate,
+                unsigned int framerate,
+                int framewidth,
+                int frameheight,
                 bool depth_rgb_encoding);
 
   virtual ~FFMPEGEncoder();
@@ -123,6 +125,8 @@ private:
   const std::string codec_;
   unsigned bitrate_;
   unsigned framerate_;
+  int framewidth_;
+  int frameheight_;
   bool depth_rgb_encoding_;
 
   // ROS image subscriber class

@@ -43,13 +43,15 @@ namespace ros_http_video_streamer
 struct ServerConfiguration
 {
   ServerConfiguration() :
+    // DEFAULT CONFIGURATION
       address_("mbl.willowgarage.com"),
       port_(8888),
       codec_("webm"),
       bitrate_(100000),
       framerate_(31),
-      depth_encoding_(false)
-
+      depth_encoding_(false),
+      frame_width_(-1),
+      frame_height_(-1)
   {
   }
 
@@ -74,6 +76,11 @@ struct ServerConfiguration
   int framerate_;
   // transform depth stream to work with WebGL-based pointcloud streaming
   bool depth_encoding_;
+
+  // width of frame
+  int frame_width_;
+  // height of frame
+  int frame_height_;
 
 };
 

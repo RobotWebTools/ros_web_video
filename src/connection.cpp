@@ -174,6 +174,8 @@ void connection::streamingWorkerThread( const std::string& topic,
                                               config.codec_,
                                               config.bitrate_,
                                               config.framerate_,
+                                              config.frame_width_,
+                                              config.frame_height_,
                                               config.depth_encoding_);
 
    std::vector<uint8_t> header;
@@ -367,7 +369,17 @@ void connection::getStreamingParametersFromURL(const std::string url, ServerConf
         {
           config.depth_encoding_ = true;
         }
-      } catch (boost::bad_lexical_cast& e)  {}
+        else
+        if (!setting[0].compare("width"))
+        {
+          config.frame_width_ = boost::lexical_cast<int>( setting[1] );
+        }
+        else
+        if (!setting[0].compare("height"))
+        {
+          config.frame_height_ = boost::lexical_cast<int>( setting[1] );
+        }
+        } catch (boost::bad_lexical_cast& e)  {}
     }
   }
 

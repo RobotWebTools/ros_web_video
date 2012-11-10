@@ -49,6 +49,7 @@
 
 #define CODER_BUF_SIZE 50000
 
+
 namespace ros_http_video_streamer
 {
 
@@ -71,8 +72,10 @@ public:
 
   // initialize ffmpeg coding
   void init(const std::string& ffmpeg_codec_name,
-            unsigned int width,
-            unsigned int height,
+            int input_width,
+            int input_height,
+            int output_width,
+            int output_height,
             unsigned int bitrate,
             unsigned int framerate);
 
@@ -111,6 +114,11 @@ private:
   double ffmpeg_video_pts_;
   uint8_t* ffmpeg_render_buf_;
   struct SwsContext *ffmpeg_sws_ctx_;
+
+  int input_width_;
+  int input_height_;
+  int output_width_;
+  int output_height_;
 
 };
 

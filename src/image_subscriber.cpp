@@ -72,6 +72,9 @@ void ImageSubscriber::image_cb(const sensor_msgs::ImageConstPtr& msg)
   boost::mutex::scoped_lock lock(frame_mutex_);
 
   frame_queue_.push_front(msg);
+
+  while (frame_queue_.size() > IMAGE_BUFFER_SIZE)
+    frame_queue_.pop_back();
 }
 
 void ImageSubscriber::reset()
@@ -90,9 +93,6 @@ void ImageSubscriber::getImageFromQueue(sensor_msgs::ImageConstPtr& frame)
     // if queue not empty..
     if (frame_queue_.size())
     {
-      while (frame_queue_.size() > IMAGE_BUFFER_SIZE)
-        frame_queue_.pop_back();
-
       // pop frame from back of queue
       frame = frame_queue_.back();
       frame_queue_.pop_back();
