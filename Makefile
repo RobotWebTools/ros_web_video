@@ -306,6 +306,19 @@ tests/fast:
 	$(MAKE) -f CMakeFiles/tests.dir/build.make CMakeFiles/tests.dir/build
 .PHONY : tests/fast
 
+#=============================================================================
+# Target rules for targets named webGLPointCloudTopicConverter
+
+# Build rule for target.
+webGLPointCloudTopicConverter: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 webGLPointCloudTopicConverter
+.PHONY : webGLPointCloudTopicConverter
+
+# fast build rule for target.
+webGLPointCloudTopicConverter/fast:
+	$(MAKE) -f CMakeFiles/webGLPointCloudTopicConverter.dir/build.make CMakeFiles/webGLPointCloudTopicConverter.dir/build
+.PHONY : webGLPointCloudTopicConverter/fast
+
 # target to build an object file
 src/connection.o:
 	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/connection.o
@@ -426,6 +439,21 @@ src/topic_streamer.s:
 	$(MAKE) -f CMakeFiles/ros_http_video_streamer.dir/build.make CMakeFiles/ros_http_video_streamer.dir/src/topic_streamer.s
 .PHONY : src/topic_streamer.s
 
+# target to build an object file
+tools/depth_to_webGL_pointclouds.o:
+	$(MAKE) -f CMakeFiles/webGLPointCloudTopicConverter.dir/build.make CMakeFiles/webGLPointCloudTopicConverter.dir/tools/depth_to_webGL_pointclouds.o
+.PHONY : tools/depth_to_webGL_pointclouds.o
+
+# target to preprocess a source file
+tools/depth_to_webGL_pointclouds.i:
+	$(MAKE) -f CMakeFiles/webGLPointCloudTopicConverter.dir/build.make CMakeFiles/webGLPointCloudTopicConverter.dir/tools/depth_to_webGL_pointclouds.i
+.PHONY : tools/depth_to_webGL_pointclouds.i
+
+# target to generate assembly for a file
+tools/depth_to_webGL_pointclouds.s:
+	$(MAKE) -f CMakeFiles/webGLPointCloudTopicConverter.dir/build.make CMakeFiles/webGLPointCloudTopicConverter.dir/tools/depth_to_webGL_pointclouds.s
+.PHONY : tools/depth_to_webGL_pointclouds.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -450,6 +478,7 @@ help:
 	@echo "... test-results"
 	@echo "... test-results-run"
 	@echo "... tests"
+	@echo "... webGLPointCloudTopicConverter"
 	@echo "... src/connection.o"
 	@echo "... src/connection.i"
 	@echo "... src/connection.s"
@@ -474,6 +503,9 @@ help:
 	@echo "... src/topic_streamer.o"
 	@echo "... src/topic_streamer.i"
 	@echo "... src/topic_streamer.s"
+	@echo "... tools/depth_to_webGL_pointclouds.o"
+	@echo "... tools/depth_to_webGL_pointclouds.i"
+	@echo "... tools/depth_to_webGL_pointclouds.s"
 .PHONY : help
 
 

@@ -52,7 +52,6 @@ set_property(TARGET vpx PROPERTY
              IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/libvpx/libvpx.a)
 
 
-#common commands for building c++ executables and libraries 
 rosbuild_add_executable(${PROJECT_NAME}  src/ffmpeg_wrapper.cpp 
                                          src/server.cpp
                                          src/connection.cpp
@@ -65,5 +64,10 @@ rosbuild_add_executable(${PROJECT_NAME}  src/ffmpeg_wrapper.cpp
                                          
 target_link_libraries(${PROJECT_NAME} avcodec avformat avutil avfilter swscale vpx bz2 z)
 rosbuild_link_boost(${PROJECT_NAME} thread signals system)       
+
+                                         
+#common commands for building c++ executables and libraries 
+rosbuild_add_executable(webGLPointCloudTopicConverter tools/depth_to_webGL_pointclouds.cpp)                                       
+rosbuild_link_boost(webGLPointCloudTopicConverter thread signals system)       
 
     
