@@ -337,6 +337,8 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
 
 void connection::getStreamingParametersFromURL(const std::string url, ServerConfiguration& config)
 {
+  config.depth_encoding_ = false;
+
   std::vector<std::string> parameters;
   boost::split(parameters,url,boost::is_any_of("&"));
   BOOST_FOREACH( const std::string& p, parameters )
@@ -382,6 +384,9 @@ void connection::getStreamingParametersFromURL(const std::string url, ServerConf
         if (!setting[0].compare("gop"))
         {
           config.gop_ = boost::lexical_cast<int>( setting[1] );
+        } else
+        {
+          ROS_WARN_STREAM("Invalid configuration parameter in http request: "<<setting[1]);
         }
       } catch (boost::bad_lexical_cast& e)  {}
     }
