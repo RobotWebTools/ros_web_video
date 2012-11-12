@@ -373,7 +373,17 @@ void connection::getStreamingParametersFromURL(const std::string url, ServerConf
         {
           config.frame_height_ = boost::lexical_cast<int>( setting[1] );
         }
-        } catch (boost::bad_lexical_cast& e)  {}
+        else
+        if (!setting[0].compare("quality"))
+        {
+          config.quality_ = boost::lexical_cast<int>( setting[1] );
+        }
+        else
+        if (!setting[0].compare("gop"))
+        {
+          config.gop_ = boost::lexical_cast<int>( setting[1] );
+        }
+      } catch (boost::bad_lexical_cast& e)  {}
     }
   }
 
