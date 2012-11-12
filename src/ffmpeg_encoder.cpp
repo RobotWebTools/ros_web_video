@@ -50,21 +50,11 @@ namespace ros_http_video_streamer
 
 FFMPEGEncoder::FFMPEGEncoder(const std::string& refID,
                              const std::string& topic,
-                             const std::string& codec,
-                             unsigned int bitrate,
-                             unsigned int framerate,
-                             int framewidth,
-                             int frameheight,
-                             bool depth_rgb_encoding) :
+                             const ServerConfiguration& config) :
     doEncoding_(true),
     refID_(refID),
     topic_(topic),
-    codec_(codec),
-    bitrate_(bitrate),
-    framerate_(framerate),
-    framewidth_(framewidth),
-    frameheight_(frameheight),
-    depth_rgb_encoding_(depth_rgb_encoding),
+    config_(config),
     subscriber_(topic),
     encoding_queue_thread_(0),
     encoding_header_mutex_(),
@@ -444,7 +434,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
 {
   // time stamps used to control the encoder rate
   unsigned int milisec_used;
-  const unsigned int milisec_per_frame = 1000 / framerate_;
+  const unsigned int milisec_per_frame = 1000 / config_.framerate_;
 
   while (doEncoding_)
   {
@@ -461,7 +451,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
     if (frame)
     {
 
-      if (depth_rgb_encoding_)
+      if (config_.depth_encoding_)
       {
         // depth image needs to be transformed into a 2^x X 2^x resolution in order to enable WebGL-based pointclouds
         sensor_msgs::ImagePtr frame_resized = sensor_msgs::ImagePtr(new sensor_msgs::Image());
@@ -483,7 +473,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
         ffmpeg_ = new FFMPEG_Wrapper();
 
         // first input frame defines resolution
-        ffmpeg_->init(codec_, frame->width, frame->height, framewidth_, frameheight_, bitrate_, framerate_);
+        ffmpeg_->init(frame->width, frame->height, config_);
         {
           {
             boost::lock_guard<boost::mutex> lock(encoding_header_mutex_);
@@ -527,7 +517,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
           {
             // floating-point encoded frame
 
-            if (depth_rgb_encoding_)
+            if (config_.depth_encoding_)
             {
               std::vector<uint8_t> rgb_image;
 

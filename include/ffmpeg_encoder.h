@@ -38,17 +38,17 @@
 
 #define DEPTH_TO_RGB_AVERAGE
 
-#include <boost/thread.hpp>
-
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "ffmpeg_wrapper.h"
-
-#include "image_subscriber.h"
+#include <boost/thread.hpp>
 
 #include <sensor_msgs/image_encodings.h>
+
+#include "ffmpeg_wrapper.h"
+#include "image_subscriber.h"
+#include "server_configuration.h"
 
 namespace ros_http_video_streamer
 {
@@ -61,12 +61,7 @@ public:
 
   FFMPEGEncoder(const std::string& refID,
                 const std::string& topic,
-                const std::string& codec,
-                unsigned int bitrate,
-                unsigned int framerate,
-                int framewidth,
-                int frameheight,
-                bool depth_rgb_encoding);
+                const ServerConfiguration& config);
 
   virtual ~FFMPEGEncoder();
 
@@ -118,14 +113,14 @@ private:
   // encoding thread running?
   bool doEncoding_;
 
+  // reference ID used for registration
   const std::string refID_;
+
+  // ROS topic
   const std::string topic_;
-  const std::string codec_;
-  unsigned bitrate_;
-  unsigned framerate_;
-  int framewidth_;
-  int frameheight_;
-  bool depth_rgb_encoding_;
+
+  // server&encoder configuration
+  const ServerConfiguration& config_;
 
   // ROS image subscriber class
   ImageSubscriber subscriber_;

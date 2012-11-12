@@ -39,6 +39,8 @@
 
 #include "ffmpeg_encoder.h"
 
+#include "server_configuration.h"
+
 #include <map>
 #include <string>
 
@@ -63,24 +65,19 @@ public:
 
   //
   FFMPEGEncoder::ptr subscribe(const std::string& topic,
-                               const std::string& codec,
-                               unsigned int bitrate,
-                               unsigned int framerate,
-                               int framewidth,
-                               int frameheight,
-                               bool depth_rgb_encoding)
+                               const ServerConfiguration& config)
   {
     boost::mutex::scoped_lock lock(mutex_);
 
     ++request_counter_;
 
     std::string refID = topic +
-                        codec +
-                        "BR:"+boost::lexical_cast<std::string>(bitrate) +
-                        "FR:"+boost::lexical_cast<std::string>(framerate) +
-                        "FW:"+boost::lexical_cast<std::string>(framewidth) +
-                        "FH:"+boost::lexical_cast<std::string>(frameheight) +
-                        "T:"+(depth_rgb_encoding ? "DepthRGBTranscoding" : "NoTranscoding");
+                        config.codec_ +
+                        "BR:"+boost::lexical_cast<std::string>(config.bitrate_) +
+                        "FR:"+boost::lexical_cast<std::string>(config.framerate_) +
+                        "FW:"+boost::lexical_cast<std::string>(config.frame_width_) +
+                        "FH:"+boost::lexical_cast<std::string>(config.frame_height_) +
+                        "T:"+(config.depth_encoding_ ? "DepthRGBTranscoding" : "NoTranscoding");
 
     FFMPEGEncoder::ptr image_encoder;
 
@@ -97,7 +94,7 @@ public:
     else
     {
       // if not found, create new instance of encoder
-      image_encoder = FFMPEGEncoder::ptr(new FFMPEGEncoder(refID, topic, codec, bitrate, framerate, framewidth, frameheight, depth_rgb_encoding));
+      image_encoder = FFMPEGEncoder::ptr(new FFMPEGEncoder(refID, topic, config));
 
       EncoderInfo encInfo;
       encInfo.enc_ = image_encoder;
@@ -109,7 +106,7 @@ public:
 #else
     // make request ID unique
     refID += "ReqID:" + boost::lexical_cast<std::string>(request_counter_);
-    image_encoder = FFMPEGEncoder::ptr(new FFMPEGEncoder(refID, topic, codec, bitrate, framerate, framewidth, frameheight, depth_rgb_encoding));
+    image_encoder = FFMPEGEncoder::ptr(new FFMPEGEncoder(refID, topic, config));
 
     EncoderInfo encInfo;
     encInfo.enc_ = image_encoder;

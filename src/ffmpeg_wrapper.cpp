@@ -79,6 +79,7 @@ FFMPEG_Wrapper::FFMPEG_Wrapper() :
     ffmpeg_video_pts_(0.0),
     ffmpeg_render_buf_(0),
     ffmpeg_sws_ctx_(0),
+    config_(),
     input_width_(-1),
     input_height_(-1),
     output_width_(-1),
@@ -91,19 +92,18 @@ FFMPEG_Wrapper::~FFMPEG_Wrapper()
   shutdown();
 }
 
-void FFMPEG_Wrapper::init(const std::string& codec_name,
-                          int input_width,
+void FFMPEG_Wrapper::init(int input_width,
                           int input_height,
-                          int output_width,
-                          int output_height,
-                          unsigned int bitrate,
-                          unsigned int framerate)
+                          const ServerConfiguration& config)
 {
+
+  config_  = config;
 
   input_width_ = input_width;
   input_height_ = input_height;
-  output_width_ = output_width;
-  output_height_ = output_height;
+
+  output_width_ = config.frame_width_;
+  output_height_ = config.frame_height_;
 
   if (output_width_<0)
     output_width_ = input_width_;
@@ -116,7 +116,7 @@ void FFMPEG_Wrapper::init(const std::string& codec_name,
   av_register_all();
 
   // lookup webm codec
-  avformat_alloc_output_context2(&ffmpeg_format_context_, NULL, codec_name.c_str(), NULL);
+  avformat_alloc_output_context2(&ffmpeg_format_context_, NULL, config_.codec_.c_str(), NULL);
   if (!ffmpeg_format_context_) {
     exit(1);
   }
@@ -155,13 +155,13 @@ void FFMPEG_Wrapper::init(const std::string& codec_name,
     //////////////////////////////////////////////
 
     ffmpeg_codec_context_->codec_id = ffmpeg_output_format_->video_codec;
-    ffmpeg_codec_context_->bit_rate = bitrate;
+    ffmpeg_codec_context_->bit_rate = config_.bitrate_;
 
     ffmpeg_codec_context_->width = output_width_;
     ffmpeg_codec_context_->height = output_height_;
     ffmpeg_codec_context_->delay = 0;
 
-    ffmpeg_codec_context_->time_base.den = framerate+5;
+    ffmpeg_codec_context_->time_base.den = config_.framerate_+5; //increased framerate to compensate playback delay
     ffmpeg_codec_context_->time_base.num = 1;
     ffmpeg_codec_context_->gop_size = 60; /* emit one intra ffmpeg_frame_ every twelve frames at most */
     ffmpeg_codec_context_->pix_fmt = PIX_FMT_YUV420P;

@@ -40,6 +40,8 @@
 
 #include <boost/cstdint.hpp>
 
+#include "server_configuration.h"
+
 #ifndef FFMPEG_WRAPPER_HEADER_INCLUDED
 #define FFMPEG_WRAPPER_HEADER_INCLUDED
 
@@ -71,13 +73,9 @@ public:
   ~FFMPEG_Wrapper();
 
   // initialize ffmpeg coding
-  void init(const std::string& ffmpeg_codec_name,
-            int input_width,
+  void init(int input_width,
             int input_height,
-            int output_width,
-            int output_height,
-            unsigned int bitrate,
-            unsigned int framerate);
+            const ServerConfiguration& config);
 
   // shutdown ffmpeg coding
   void shutdown();
@@ -114,6 +112,8 @@ private:
   double ffmpeg_video_pts_;
   uint8_t* ffmpeg_render_buf_;
   struct SwsContext *ffmpeg_sws_ctx_;
+
+  ServerConfiguration config_;
 
   int input_width_;
   int input_height_;

@@ -170,13 +170,7 @@ void connection::streamingWorkerThread( const std::string& topic,
   char hexSize[256];
 #endif
 
-   image_encoder = encoder_manager_.subscribe(topic,
-                                              config.codec_,
-                                              config.bitrate_,
-                                              config.framerate_,
-                                              config.frame_width_,
-                                              config.frame_height_,
-                                              config.depth_encoding_);
+   image_encoder = encoder_manager_.subscribe(topic, config);
 
    std::vector<uint8_t> header;
 
