@@ -420,10 +420,12 @@ void connection::handleRead(const boost::system::error_code& e,
     boost::tribool result;
     boost::tie(result, boost::tuples::ignore) = request_parser_.parse(
         request_, buffer_.data(), buffer_.data() + bytes_transferred);
+        
+    const std::string remote_ip = boost::lexical_cast<std::string>(socket_.remote_endpoint());
 
     if (result)
     {
-      ROS_DEBUG("Http request: %s", request_.uri.c_str());
+      ROS_INFO("Http request received from %s: %s", remote_ip.c_str(), request_.uri.c_str());
 
       std::string request_path;
       // update list of available image topics
