@@ -337,6 +337,8 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
 
 void connection::getStreamingParametersFromURL(const std::string url, ServerConfiguration& config)
 {
+  config.depth_encoding_ = false;
+
   std::vector<std::string> parameters;
   boost::split(parameters,url,boost::is_any_of("&"));
   BOOST_FOREACH( const std::string& p, parameters )
@@ -373,7 +375,20 @@ void connection::getStreamingParametersFromURL(const std::string url, ServerConf
         {
           config.frame_height_ = boost::lexical_cast<int>( setting[1] );
         }
-        } catch (boost::bad_lexical_cast& e)  {}
+        else
+        if (!setting[0].compare("quality"))
+        {
+          config.quality_ = boost::lexical_cast<int>( setting[1] );
+        }
+        else
+        if (!setting[0].compare("gop"))
+        {
+          config.gop_ = boost::lexical_cast<int>( setting[1] );
+        } else
+        {
+          ROS_WARN_STREAM("Invalid configuration parameter in http request: "<<setting[1]);
+        }
+      } catch (boost::bad_lexical_cast& e)  {}
     }
   }
 
@@ -405,10 +420,12 @@ void connection::handleRead(const boost::system::error_code& e,
     boost::tribool result;
     boost::tie(result, boost::tuples::ignore) = request_parser_.parse(
         request_, buffer_.data(), buffer_.data() + bytes_transferred);
+        
+    const std::string remote_ip = boost::lexical_cast<std::string>(socket_.remote_endpoint());
 
     if (result)
     {
-      ROS_DEBUG("Http request: %s", request_.uri.c_str());
+      ROS_INFO("Http request received from %s: %s", remote_ip.c_str(), request_.uri.c_str());
 
       std::string request_path;
       // update list of available image topics

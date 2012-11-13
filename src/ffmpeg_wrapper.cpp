@@ -161,9 +161,9 @@ void FFMPEG_Wrapper::init(int input_width,
     ffmpeg_codec_context_->height = output_height_;
     ffmpeg_codec_context_->delay = 0;
 
-    ffmpeg_codec_context_->time_base.den = config_.framerate_+5; //increased framerate to compensate playback delay
+    ffmpeg_codec_context_->time_base.den = config_.framerate_+2; //increased framerate to compensate playback delay
     ffmpeg_codec_context_->time_base.num = 1;
-    ffmpeg_codec_context_->gop_size = 60; /* emit one intra ffmpeg_frame_ every twelve frames at most */
+    ffmpeg_codec_context_->gop_size = config_.gop_; /* emit one intra ffmpeg_frame_ every twelve frames at most */
     ffmpeg_codec_context_->pix_fmt = PIX_FMT_YUV420P;
     ffmpeg_codec_context_->max_b_frames = 0;
 
@@ -189,6 +189,8 @@ void FFMPEG_Wrapper::init(int input_width,
     // Quality settings
     //ffmpeg_codec_context_->qmin = 50;
     //ffmpeg_codec_context_->qmax = 62;
+    if (config_.quality_>0)
+      ffmpeg_codec_context_->qmin = config_.quality_;
 
      //ffmpeg_codec_context_->frame_skip_threshold = 100;
 

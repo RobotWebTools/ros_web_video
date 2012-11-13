@@ -82,6 +82,12 @@ int main(int argc, char* argv[])
   // read depth_encoding option from param server
   priv_nh_.param<bool>("depth_encoding", server_conf.depth_encoding_, server_conf.depth_encoding_);
 
+  // read quality parameter from param server
+  priv_nh_.param<int>("quality", server_conf.quality_, server_conf.quality_);
+
+  // read group of pictures from param server
+  priv_nh_.param<int>("gop", server_conf.gop_, server_conf.gop_);
+
   showConfig(server_conf);
 
   try
