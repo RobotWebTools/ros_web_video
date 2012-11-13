@@ -36,7 +36,7 @@
 	</head>
 	<body>
 
-		<script src="build/three.min.js"></script>
+		<script src="../build/three.min.js"></script>
 
 		<script src='js/libs/DAT.GUI.min.js'></script>
 
@@ -54,6 +54,8 @@
 			uniform float pointSize;
 			uniform float zOffset;
 
+
+
 			varying vec2 vUv;
 
 			const float XtoZ = 1.11146; // tan( 1.0144686 / 2.0 ) * 2.0;
@@ -64,20 +66,102 @@
 				vUv = vec2( position.x / width, position.y / height );
 
 				vec4 color = texture2D( map, vUv );
+
 				float depth = ( color.r + color.g + color.b ) / 3.0;
 
-                                //depth = depth*0.05;
+				int rInt = int(color.r*255.0+0.49);
+				int gInt = int(color.g*255.0+0.49);
+				int bInt = int(color.b*255.0+0.49);
 
-				// Projection code by @kcmic
+                                bool rInt8 = bool(rInt>127);
+                                if  (rInt8==true) 
+                                   rInt = rInt - 128;
 
-				float z = ( 1.0 - depth ) * (farClipping - nearClipping) + nearClipping;
+                                bool rInt7 = bool(rInt>63);
+                                if  (rInt7==true) 
+                                   rInt = rInt - 64;
 
-				vec4 pos = vec4(
-					( position.x / width - 0.5 ) * z * XtoZ,
-					( position.y / height - 0.5 ) * z * YtoZ,
-					- z + zOffset,
-					1.0);
+                                bool rInt6 = bool(rInt>31);
+                                if  (rInt6==true) 
+                                   rInt = rInt - 32;
 
+                                bool rInt5 = bool(rInt>15);
+                                if  (rInt5==true) 
+                                   rInt = rInt - 16;
+
+                                bool gInt8 = bool(gInt>127);
+                                if  (gInt8==true) 
+                                   gInt = gInt - 128;
+
+                                bool gInt7 = bool(gInt>63);
+                                if  (gInt7==true) 
+                                   gInt = gInt - 64;
+
+                                bool gInt6 = bool(gInt>31);
+                                if  (gInt6==true) 
+                                   gInt = gInt - 32;
+
+                                bool gInt5 = bool(gInt>15);
+                                if  (gInt5==true) 
+                                   gInt = gInt - 16;
+
+                                bool bInt8 = bool(bInt>127);
+                                if  (bInt8==true) 
+                                   bInt = bInt - 128;
+
+                                bool bInt7 = bool(bInt>63);
+                                if  (bInt7==true) 
+                                   bInt = bInt - 64;
+
+                                bool bInt6 = bool(bInt>31);
+                                if  (bInt6==true) 
+                                   bInt = bInt - 32;
+
+                                bool bInt5 = bool(bInt>15);
+                                if  (bInt5==true) 
+                                   bInt = bInt - 16;
+
+				int depthInt = 0;
+				if (rInt5==true)
+				   depthInt = depthInt + 1;
+				if (rInt6==true)
+				   depthInt = depthInt + 2;
+				if (rInt7==true)
+				   depthInt = depthInt + 4;
+				if (rInt8==true)
+				   depthInt = depthInt + 8;
+				if (gInt5==true)
+				   depthInt = depthInt + 16;
+				if (gInt6==true)
+				   depthInt = depthInt + 32;
+				if (gInt7==true)
+				   depthInt = depthInt + 64;
+				if (gInt8==true)
+				   depthInt = depthInt + 128;
+				if (bInt5==true)
+				   depthInt = depthInt + 256;
+				if (bInt6==true)
+				   depthInt = depthInt + 512;
+				if (bInt7==true)
+				   depthInt = depthInt + 1024;
+				if (bInt8==true)
+				   depthInt = depthInt + 2048;
+
+    				 depth = float(depthInt)/float(4096)*-1.0;
+
+				 float z = ( 1.0 - depth ) * (farClipping - nearClipping) + nearClipping;
+
+				 vec4 pos = vec4(
+				 	( position.x / width - 0.5 ) * z * XtoZ,
+				 	( position.y / height - 0.5 ) * z * YtoZ,
+				 	- z + zOffset,
+				 	1.0);
+
+                                 if (depthInt<10)
+                              	  pos = vec4(1110.0,1110.0,1110.0,1.0);
+           
+
+				
 				gl_PointSize = pointSize;
 				gl_Position = projectionMatrix * modelViewMatrix * pos;
 
@@ -94,19 +178,10 @@
 			void main() {
 
 				vec4 color = texture2D( map, vUv );
-                                float depth = ( color.r + color.g + color.b ) / 3.0;
-                                if (depth<0.95)
-                                {
-                                   gl_FragColor = vec4( 1.0, 1.0, 1.0, smoothstep( 8000.0, -8000.0, gl_FragCoord.z / gl_FragCoord.w ) );
-                                }
-                                else
-                                {
-				   gl_FragColor = vec4( 1.0, 1.0, 1.0, 0 );
-                                }
-
-
-				//gl_FragColor = vec4( 1.0, 1.0, 1.0, smoothstep( 8000.0, -8000.0, gl_FragCoord.z / gl_FragCoord.w ) );
-				//gl_FragColor = vec4( color.r, color.g, color.b, smoothstep( 8000.0, -8000.0, gl_FragCoord.z / gl_FragCoord.w ) );
+                                color.r = 0.99;
+				color.g = 0.99;
+				color.b = 0.99;
+				gl_FragColor = vec4( color.r, color.g, color.b, smoothstep( 8000.0, -8000.0, gl_FragCoord.z / gl_FragCoord.w ) );
 
 			}
 
@@ -159,9 +234,10 @@
 				video = document.createElement( 'video' );
 				video.addEventListener( 'loadedmetadata', function ( event ) {
 
-					texture = new THREE.Texture( video );
+					texture = new THREE.Texture( video ); 
+                                        
 
-					var width = 640, height = 480;
+					var width = 1024, height = 1024;
 					var nearClipping = 850/*850*/, farClipping = 4000/*4000*/;
 
 					geometry = new THREE.Geometry();
@@ -222,8 +298,9 @@
 
 				}, false );
 				video.loop = true;
-				video.src = '/webm';//textures/kinect.webm';//';
+				video.src = 'textures/depth_color.webm';//kinect-cp.webm';
 				video.play();
+
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );

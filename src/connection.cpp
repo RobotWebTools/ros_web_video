@@ -39,6 +39,9 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
+#include <sstream>
+
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -67,6 +70,20 @@ const std::string ok =
 } // namespace misc_strings
 
 
+struct mime_map
+{
+  const char* extension;
+  const char* mime_type;
+} mime_mapping[] =
+{
+  { "gif", "image/gif" },
+  { "htm", "text/html" },
+  { "html", "text/html" },
+  { "jpg", "image/jpeg" },
+  { "png", "image/png" },
+  { 0, 0 } // Marks end of list.
+};
+
 connection::connection(boost::asio::io_service& io_service,
                        EncoderManager& encoder_manager,
                        const ServerConfiguration& default_server_conf)
@@ -80,7 +97,8 @@ connection::connection(boost::asio::io_service& io_service,
     reply_(),
     encoder_manager_(encoder_manager),
     streaming_thread_(),
-    do_streaming_(false)
+    do_streaming_(false),
+    doc_root_("./www/")
 {
 }
 
@@ -411,6 +429,19 @@ void connection::start()
 
 }
 
+std::string connection::mimeExtensionToType(const std::string& extension)
+{
+  for (mime_map* m = mime_mapping; m->extension; ++m)
+  {
+    if (m->extension == extension)
+    {
+      return m->mime_type;
+    }
+  }
+
+  return "text/plain";
+}
+
 void connection::handleRead(const boost::system::error_code& e,
     std::size_t bytes_transferred)
 {
@@ -475,9 +506,6 @@ void connection::handleRead(const boost::system::error_code& e,
                    config.depth_encoding_?"DepthToRGB":"No");
 
           return;
-        } else
-        {
-          reply_ = reply::stock_reply(reply::not_found);
         }
       }
       else if (!request_path.empty() && request_path.find(WEB_PATH) != std::string::npos)
@@ -506,7 +534,35 @@ void connection::handleRead(const boost::system::error_code& e,
         }
       } else
       {
-        reply_ = reply::stock_reply(reply::not_found);
+
+        // Determine the file extension.
+        std::size_t last_slash_pos = request_path.find_last_of("/");
+        std::size_t last_dot_pos = request_path.find_last_of(".");
+        std::string extension;
+        if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos)
+        {
+          extension = request_path.substr(last_dot_pos + 1);
+        }
+
+        // Open the file to send back.
+        std::string full_path = doc_root_ + request_path;
+        std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
+        if (!is)
+        {
+          reply_ = reply::stock_reply(reply::not_found);
+          return;
+        }
+
+        // Fill out the reply to be sent to the client.
+        reply_.status = reply::ok;
+        char buf[2048];
+        while (is.read(buf, sizeof(buf)).gcount() > 0)
+          reply_.content.append(buf, is.gcount());
+        reply_.headers.resize(2);
+        reply_.headers[0].name = "Content-Length";
+        reply_.headers[0].value = boost::lexical_cast < std::string > (reply_.content.size());
+        reply_.headers[1].name = "Content-Type";
+        reply_.headers[1].value = mimeExtensionToType(extension);
       }
 
   //    request_handler_.handle_request(request_path, reply_);

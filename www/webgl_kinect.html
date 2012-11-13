@@ -157,7 +157,7 @@
                                          float depth = smp.x;
                                          vari = smp.y;
 
-					if (depth>0.02)
+					if (true)//depth>0.02)
 					{
 					 float z = ( 1.0 - depth * (-0.5) ) * (farClipping - nearClipping) + nearClipping;
 
@@ -305,7 +305,7 @@
 							"farClipping": { type: "f", value: farClipping },
 
 							"pointSize": { type: "f", value: 2 },
-							"zOffset": { type: "f", value: 1000 },
+							"zOffset": { type: "f", value: 4000 },
                                                         "colorFader": { type: "f", value: colorFader },
 							"varianceFilter": { type: "f", value: varianceFilter }
 
@@ -344,7 +344,7 @@
 
 				}, false );
 				video.loop = true;
-				video.src = 'textures/depth_color.webm';//kinect-cp.webm';
+				video.src = 'textures/depth_color2.webm';//kinect-cp.webm';
 				video.play();
 
 

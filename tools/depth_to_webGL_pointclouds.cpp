@@ -61,11 +61,12 @@ public:
     depth_sub_(),
     color_it_(nh_),
     color_sub_(),
-    pub_it_(nh_)
+    pub_it_(nh_),
+    crop_size_(512)
   {
     // read depth map topic from param server
     std::string depthmap_topic;
-    nh_.param<std::string>("depth", depthmap_topic, "/camera/depth/image");
+    nh_.param<std::string>("depth", depthmap_topic, "/camera/depth_registered/image");
 
     // read depth map topic from param server
     std::string rgb_image_topic;
@@ -109,15 +110,15 @@ public:
 
   void depth_only_cb(const sensor_msgs::ImageConstPtr& depth_msg)
   {
-    process(depth_msg, sensor_msgs::ImageConstPtr());
+    process(depth_msg, sensor_msgs::ImageConstPtr(), crop_size_);
   }
 
   void depth_with_color_cb(const sensor_msgs::ImageConstPtr& depth_msg, const sensor_msgs::ImageConstPtr& color_msg)
   {
-    process(depth_msg, color_msg);
+    process(depth_msg, color_msg, crop_size_);
   }
 
-  void process(const sensor_msgs::ImageConstPtr& depth_msg, const sensor_msgs::ImageConstPtr& color_msg)
+  void process(const sensor_msgs::ImageConstPtr& depth_msg, const sensor_msgs::ImageConstPtr& color_msg, const std::size_t crop_size)
   {
     // Bit depth of image encoding
     int depth_bits = enc::bitDepth(depth_msg->encoding);
@@ -132,6 +133,7 @@ public:
       return;
     }
 
+    // check for color message
     if (color_msg)
     {
       color_bits = enc::bitDepth(color_msg->encoding);
@@ -159,15 +161,15 @@ public:
     }
 
 
+    // preprocessing => close NaN hole via interpolation and generat valid_point_mask
     sensor_msgs::ImagePtr depth_int_msg (new sensor_msgs::Image());
-    sensor_msgs::ImagePtr mask_msg (new sensor_msgs::Image());
+    sensor_msgs::ImagePtr valid_mask_msg (new sensor_msgs::Image());
 
-    depthInterpolation(depth_msg,depth_int_msg,mask_msg);
+    depthInterpolation(depth_msg,depth_int_msg,valid_mask_msg);
 
-    std::size_t crop_size = 512;
     unsigned int pix_size = enc::bitDepth(enc::BGR8)/8*3;
 
-    // output image message
+    // generate output image message
     sensor_msgs::ImagePtr output_msg ( new sensor_msgs::Image );
     output_msg->header = depth_int_msg->header;
     output_msg->encoding = enc::BGR8;
@@ -176,18 +178,17 @@ public:
     output_msg->step = output_msg->width * pix_size;
     output_msg->is_bigendian = depth_int_msg->is_bigendian;
 
-    // allocate data
+    // allocate memory
     output_msg->data.resize(output_msg->width * output_msg->height * pix_size, 0);
 
     std::size_t input_width = depth_int_msg->width;
     std::size_t input_height = depth_int_msg->height;
 
     // copy depth & color data to output image
-
     {
-      std::size_t y, x, top_x, top_y, width_x, width_y;
+      std::size_t y, x, left_x, top_y, width_x, width_y;
 
-      // calculate borders
+      // calculate borders to crop input image to crop_size X crop_size
       int top_bottom_corner = (input_height - crop_size) / 2;
       int left_right_corner = (input_width - crop_size) / 2;
 
@@ -204,65 +205,61 @@ public:
 
       if (left_right_corner < 0)
       {
-        top_x = 0;
+        left_x = 0;
         width_x = input_width;
       }
       else
       {
-        top_x = left_right_corner;
+        left_x = left_right_corner;
         width_x = input_width - left_right_corner;
       }
 
-      // calculate memory pointers
-      const std::size_t source_depth_line_size = sizeof(float) * (width_x - top_x);
-      const std::size_t source_depth_y_step = input_width * sizeof(float);
-      const uint8_t* source_depth_ptr = &depth_int_msg->data[(top_y * input_width + top_x) * sizeof(float)];
+      // pointer to output image
+      uint8_t* dest_ptr = &output_msg->data[((top_y - top_bottom_corner) * output_msg->width + left_x - left_right_corner) * pix_size];
+      const std::size_t dest_y_step = output_msg->step;
 
-      const std::size_t destination_y_step = output_msg->step;
+      // pointer to interpolated depth data
+      const float* source_depth_ptr = (const float*)&depth_int_msg->data[(top_y * input_width + left_x) * sizeof(float)];
 
+      // pointer to valid-pixel-mask
+      const uint8_t* source_mask_ptr = &valid_mask_msg->data[(top_y * input_width + left_x) * sizeof(uint8_t)];
+
+      // pointer to color data
       const uint8_t* source_color_ptr = 0;
-      std::size_t source_color_line_size = 0;
       std::size_t source_color_y_step = 0;
-
-      const std::size_t color_x_shift = crop_size * pix_size;;
-      const std::size_t mask_x_shift = destination_y_step*crop_size;
-
-      const std::size_t source_mask_line_size = sizeof(uint8_t) * (width_x - top_x);
-      const std::size_t source_mask_y_step = input_width * sizeof(uint8_t);
-      const uint8_t* source_mask_ptr = &mask_msg->data[(top_y * input_width + top_x) * sizeof(uint8_t)];
-
-
       if (color_msg)
       {
-        source_color_line_size = (width_x - top_x) * pix_size;
         source_color_y_step = input_width * pix_size;
-        source_color_ptr = &color_msg->data[(top_y * input_width + top_x) * pix_size];
+        source_color_ptr = &color_msg->data[(top_y * input_width + left_x) * pix_size];
       }
 
+      // helpers
+      const std::size_t right_frame_shift = crop_size * pix_size;;
+      const std::size_t down_frame_shift = dest_y_step*crop_size;
 
-      uint8_t* dest_ptr = &output_msg->data[((top_y - top_bottom_corner) * output_msg->width + top_x - left_right_corner) * pix_size];
 
-      // copy image data
-      for (y = top_y; y < width_y; ++y, source_color_ptr+=source_color_y_step,
-                                        source_depth_ptr += source_depth_y_step,
-                                        source_mask_ptr += source_mask_y_step,
-                                        dest_ptr += destination_y_step)
+      // generate output image
+      for (y = top_y; y < width_y; ++y, source_color_ptr += source_color_y_step,
+                                        source_depth_ptr += input_width,
+                                        source_mask_ptr += input_width,
+                                        dest_ptr += dest_y_step)
       {
-        float *depth_ptr = (float*)source_depth_ptr;
+        const float *depth_ptr = source_depth_ptr;
 
+        // reset iterator pointers for each column
         uint8_t *color_ptr = (uint8_t*)source_color_ptr;
-        uint8_t *out_mask_ptr = (uint8_t*)source_mask_ptr;
+        uint8_t *mask_ptr = (uint8_t*)source_mask_ptr;
 
-        uint8_t *out_depth_low_ptr = (uint8_t*)dest_ptr;
-        uint8_t *out_depth_high_ptr = (uint8_t*)dest_ptr+color_x_shift;
-        uint8_t *out_color_ptr = (uint8_t*)dest_ptr+color_x_shift+mask_x_shift;
+        uint8_t *out_depth_low_ptr = dest_ptr;
+        uint8_t *out_depth_high_ptr = dest_ptr+right_frame_shift;
+        uint8_t *out_color_ptr = dest_ptr+right_frame_shift+down_frame_shift;
 
-        for (x=top_x; x<width_x; ++x)
+        for (x=left_x; x<width_x; ++x)
         {
           uint8_t depth_pix_low;
           uint8_t depth_pix_high;
 
-          if (*depth_ptr==*depth_ptr)
+          if (*depth_ptr==*depth_ptr) // valid point
           {
             depth_pix_low = std::min(std::max(0.0f,(*depth_ptr/2.0f)*(float)0xFF), (float)0xFF);
             depth_pix_high = std::min(std::max(0.0f,((*depth_ptr-2.0f)/2.0f)*(float)0xFF), (float)0xFF);
@@ -273,14 +270,12 @@ public:
 
           }
 
-          if (*out_mask_ptr>0)
+          if (*mask_ptr>0)
           {
-            uint8_t *mast_ptr = out_depth_low_ptr+mask_x_shift;
-            memset(mast_ptr, 0xFF, pix_size);
+            uint8_t *mask_ptr = out_depth_low_ptr+down_frame_shift;
+            // white pixel for invalid point
+            memset(mask_ptr, 0xFF, pix_size);
           }
-
-          ++out_mask_ptr;
-          ++depth_ptr;
 
           *out_depth_low_ptr = depth_pix_low; ++out_depth_low_ptr;
           *out_depth_low_ptr = depth_pix_low; ++out_depth_low_ptr;
@@ -301,6 +296,11 @@ public:
             *out_color_ptr = *color_ptr;
             ++color_ptr; ++out_color_ptr;
           }
+
+          // increase input iterator pointers
+          ++mask_ptr;
+          ++depth_ptr;
+
         }
       }
     }
@@ -440,6 +440,8 @@ protected:
 
   image_transport::ImageTransport pub_it_;
   image_transport::Publisher pub_;
+
+  std::size_t crop_size_;
 
 };
 

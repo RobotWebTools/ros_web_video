@@ -110,6 +110,9 @@ private:
   /// invalid.
   static bool urlDecode(const std::string& in, std::string& out);
 
+  // find mime extension for file type
+  std::string mimeExtensionToType(const std::string& extension);
+
   // Default server configutaion
   const ServerConfiguration& server_conf_;
 
@@ -142,6 +145,8 @@ private:
 
   // streaming control
   bool do_streaming_;
+
+  std::string doc_root_;
 
 };
 
