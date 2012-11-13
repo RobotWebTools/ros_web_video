@@ -159,6 +159,7 @@ public:
     }
 
     std::size_t crop_size = 512;
+    unsigned int color_bytes = enc::bitDepth(enc::BGR8)/8;
 
     // output image message
     sensor_msgs::ImagePtr output_msg ( new sensor_msgs::Image );
@@ -166,11 +167,11 @@ public:
     output_msg->encoding = enc::BGR8;
     output_msg->width = crop_size * 2;
     output_msg->height = crop_size * 2;
-    output_msg->step = output_msg->width * 3;
+    output_msg->step = output_msg->width * pix_size;
     output_msg->is_bigendian = depth_msg->is_bigendian;
 
     // allocate data
-    output_msg->data.resize(output_msg->width * output_msg->height * 3, 0);
+    output_msg->data.resize(output_msg->width * output_msg->height * pix_size, 0);
 
     std::size_t input_width = depth_msg->width;
     std::size_t input_height = depth_msg->height;
@@ -206,7 +207,7 @@ public:
         width_x = input_width - left_right_corner;
       }
 
-      // calculate memory steps
+      // calculate memory pointers
       const std::size_t source_depth_line_size = sizeof(float) * (width_x - top_x);
       const std::size_t source_depth_y_step = input_width * sizeof(float);
       const uint8_t* source_depth_ptr = &depth_msg->data[(top_y * input_width + top_x) * sizeof(float)];
@@ -217,18 +218,18 @@ public:
       std::size_t source_color_line_size = 0;
       std::size_t source_color_y_step = 0;
 
-      const std::size_t color_x_shift = crop_size * 3;;
+      const std::size_t color_x_shift = crop_size * pix_size;;
       const std::size_t mask_x_shift = destination_y_step*crop_size;
 
       if (color_msg)
       {
-        source_color_line_size = (width_x - top_x) * 3;
-        source_color_y_step = input_width * 3;
-        source_color_ptr = &color_msg->data[(top_y * input_width + top_x) * 3];
+        source_color_line_size = (width_x - top_x) * pix_size;
+        source_color_y_step = input_width * pix_size;
+        source_color_ptr = &color_msg->data[(top_y * input_width + top_x) * pix_size];
       }
 
 
-      uint8_t* dest_ptr = &output_msg->data[((top_y - top_bottom_corner) * output_msg->width + top_x - left_right_corner) * 3];
+      uint8_t* dest_ptr = &output_msg->data[((top_y - top_bottom_corner) * output_msg->width + top_x - left_right_corner) * pix_size];
 
       // copy image data
       for (y = top_y; y < width_y; ++y, source_color_ptr+=source_color_y_step, source_depth_ptr += source_depth_y_step, dest_ptr += destination_y_step)
@@ -253,7 +254,7 @@ public:
             depth_pix_low = 0;
             depth_pix_high = 0;
             uint8_t *mast_ptr = out_depth_low_ptr+mask_x_shift;
-            memset(mast_ptr, 0xFF, 3);
+            memset(mast_ptr, 0xFF, pix_size);
           }
           ++depth_ptr;
 
@@ -278,13 +279,120 @@ public:
           }
         }
       }
+    }
 
+    {
 
     }
 
     pub_.publish(output_msg);
 
   }
+
+  // encapsulate depth, point mask & color information in a single frame
+  void depthInterpolation(sensor_msgs::ImageConstPtr depth_msg,
+                          sensor_msgs::ImagePtr depth_int_msg,
+                          sensor_msgs::ImagePtr mask_msg)
+  {
+    const std::size_t input_width = depth_msg->width;
+    const std::size_t input_height = depth_msg->height;
+
+    // output image message
+    depth_int_msg = sensor_msgs::ImagePtr ( new sensor_msgs::Image );
+    depth_int_msg->header = depth_msg->header;
+    depth_int_msg->encoding = depth_msg->encoding;
+    depth_int_msg->width = input_width;
+    depth_int_msg->height = input_height;
+    depth_int_msg->step = depth_msg->step;
+    depth_int_msg->is_bigendian = depth_msg->is_bigendian;
+    depth_int_msg->data.resize(depth_int_msg->step * output_msg->height);
+
+    sensor_msgs::ImagePtr mask_msg ( new sensor_msgs::Image );
+    mask_msg->header = depth_msg->header;
+    mask_msg->encoding = enc::TYPE_8UC1;
+    mask_msg->width = input_width;
+    mask_msg->height = input_height;
+    mask_msg->step = depth_msg->step;
+    mask_msg->is_bigendian = depth_msg->is_bigendian;
+    mask_msg->data.resize(mask_msg->step * mask_msg->height);
+
+    const float* depth_ptr = (const float*)&input->data[0];
+    float* depth_int_ptr = (const float*)&depth_int_msg->data[0];
+    const uint8_t* mask_ptr = (const float*)&mask_msg->data[0];
+
+    unsigned int y;
+    for (y = 0; y < input_height; ++y, depth_ptr+=input_width,
+                                       depth_int_ptr+=input_width,
+                                       mask_ptr+=input_width)
+    {
+      const float* in_depth_ptr = input_ptr;
+      float* out_x_ptr = output_ptr;
+
+      float leftVal = 0.0f;
+
+      const float* in_x_end_ptr = input_ptr+input_width;
+
+      while (in_x_ptr < in_x_end_ptr)
+      {
+        len = 0;
+        const float* lastpos_ptr = in_x_ptr;
+        while ((isnan(*in_x_ptr) || (*in_x_ptr==0) ) && (in_x_ptr < in_x_end_ptr))
+        {
+          ++in_x_ptr;
+          ++len;
+        }
+        if (len>0)
+        {
+          // we found a hole
+
+          // find valid pixel on right side of hole
+          float rightVal;
+          if (in_x_ptr < in_x_end_ptr)
+          {
+            rightVal = *in_x_ptr;
+          }
+          else
+          {
+            rightVal = leftVal;
+          }
+
+          // find valid pixel on left side of hole
+          if (isnan(leftVal) || (leftVal==0.0f))
+          {
+            leftVal = rightVal;
+          }
+
+
+          float incVal = (rightVal-leftVal)/(float)len;
+          float fillVal = leftVal;
+          const float* fill_ptr;
+
+          for (fill_ptr = lastpos_ptr; fill_ptr < in_x_ptr; ++fill_ptr)
+          {
+            *out_x_ptr = fillVal;
+            ++out_x_ptr;
+
+            fillVal += incVal;
+
+          }
+
+          leftVal =  rightVal;
+        }
+        else
+        {
+          leftVal =  *in_x_ptr;
+
+          *out_x_ptr = *in_x_ptr;
+          ++in_x_ptr;
+          ++out_x_ptr;
+        }
+
+      }
+
+    }
+
+  }
+
 
 protected:
   ros::NodeHandle nh_;
