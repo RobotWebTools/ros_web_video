@@ -236,7 +236,7 @@
           
           color.b = color.b * (1.0-fader)+ fader;
           
-          color.a = smoothstep( 14000.0, -14000.0, gl_FragCoord.z / gl_FragCoord.w );
+          color.a = smoothstep( 20000.0, -20000.0, gl_FragCoord.z / gl_FragCoord.w );
         }
         
         gl_FragColor = vec4( color.r, color.g, color.b, color.a );

@@ -44,12 +44,11 @@ struct ServerConfiguration
 {
   ServerConfiguration() :
     // DEFAULT CONFIGURATION
-      address_("mbl.willowgarage.com"),
+      address_("localhost"),
       port_(8888),
       codec_("webm"),
       bitrate_(100000),
       framerate_(31),
-      depth_encoding_(false),
       quality_(-1),
       gop_(60),
       frame_width_(-1),
@@ -76,8 +75,6 @@ struct ServerConfiguration
   int bitrate_;
   // maximum frame rate
   int framerate_;
-  // transform depth stream to work with WebGL-based pointcloud streaming
-  bool depth_encoding_;
   // quality // quantization
   int quality_;
   // group of pictures -> I-frame rate
