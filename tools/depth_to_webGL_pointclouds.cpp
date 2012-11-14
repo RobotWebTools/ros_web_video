@@ -179,7 +179,7 @@ public:
     output_msg->is_bigendian = depth_int_msg->is_bigendian;
 
     // allocate memory
-    output_msg->data.resize(output_msg->width * output_msg->height * pix_size, 0);
+    output_msg->data.resize(output_msg->width * output_msg->height * pix_size, 0xFF);
 
     std::size_t input_width = depth_int_msg->width;
     std::size_t input_height = depth_int_msg->height;
@@ -247,8 +247,8 @@ public:
         const float *depth_ptr = source_depth_ptr;
 
         // reset iterator pointers for each column
-        uint8_t *color_ptr = (uint8_t*)source_color_ptr;
-        uint8_t *mask_ptr = (uint8_t*)source_mask_ptr;
+        const uint8_t *color_ptr = source_color_ptr;
+        const uint8_t *mask_ptr = source_mask_ptr;
 
         uint8_t *out_depth_low_ptr = dest_ptr;
         uint8_t *out_depth_high_ptr = dest_ptr+right_frame_shift;
@@ -270,11 +270,15 @@ public:
 
           }
 
-          if (*mask_ptr>0)
+          uint8_t *mask_pix_ptr = out_depth_low_ptr+down_frame_shift;
+          if (*mask_ptr==0)
           {
-            uint8_t *mask_ptr = out_depth_low_ptr+down_frame_shift;
+            // black pixel for valid point
+            memset(mask_pix_ptr, 0x00, pix_size);
+          } else
+          {
             // white pixel for invalid point
-            memset(mask_ptr, 0xFF, pix_size);
+            memset(mask_pix_ptr, 0xFF, pix_size);
           }
 
           *out_depth_low_ptr = depth_pix_low; ++out_depth_low_ptr;
@@ -336,13 +340,13 @@ public:
     mask_msg->height = input_height;
     mask_msg->step = depth_msg->step;
     mask_msg->is_bigendian = depth_msg->is_bigendian;
-    mask_msg->data.resize(mask_msg->step * mask_msg->height, 0);
+    mask_msg->data.resize(mask_msg->step * mask_msg->height, 0xFF);
 
     const float* depth_ptr = (const float*)&depth_msg->data[0];
     float* depth_int_ptr = (float*)&depth_int_msg->data[0];
     uint8_t* mask_ptr = (uint8_t*)&mask_msg->data[0];
 
-    float leftVal = 0.0f;
+    float leftVal = -1.0f;
 
     unsigned int y, len;
     for (y = 0; y < input_height; ++y, depth_ptr+=input_width,
@@ -382,7 +386,7 @@ public:
           }
 
           // find valid pixel on left side of hole
-          if (isnan(leftVal) || (leftVal==0.0f))
+          if (isnan(leftVal) || (leftVal<0.0f))
           {
             leftVal = rightVal;
           }
@@ -397,7 +401,7 @@ public:
             *out_depth_int_ptr = fillVal;
             ++out_depth_int_ptr;
 
-            *out_mask_ptr = 255;
+            *out_mask_ptr = 0xFF;
             ++out_mask_ptr;
 
             fillVal += incVal;
@@ -411,6 +415,7 @@ public:
 
           *out_depth_int_ptr = *in_depth_ptr;
 
+          *out_mask_ptr = 0;
           ++out_mask_ptr;
           ++in_depth_ptr;
           ++out_depth_int_ptr;

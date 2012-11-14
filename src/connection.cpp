@@ -285,6 +285,7 @@ void connection::generateImageTopicHTML()
     reply_.content += topic_name+">"+topic_name+"</a></p>";
   }
   reply_.content +=
+      "<a href=\"/webgl_pointcloud_streaming.html\">WebGL-based pointcloud decoder</a>"
       "</body>"
       "</html>";
 
