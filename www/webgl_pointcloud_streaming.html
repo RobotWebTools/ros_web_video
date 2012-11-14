@@ -120,8 +120,8 @@
           float t7 = (d7-mean);
           float t8 = (d8-mean);
           float t9 = (d9-mean);
-          float r = (t1*t1+t2*t2+t3*t3+t4*t4+t5*t5+t6*t6+t7*t7+t8*t8+t9*t9)/9.0;
-          return r;
+          float v = (t1*t1+t2*t2+t3*t3+t4*t4+t5*t5+t6*t6+t7*t7+t8*t8+t9*t9)/9.0;
+          return v;
         }
       
       vec2 decodeDepth(vec2 pos)
@@ -376,7 +376,6 @@
           gui.add( material.uniforms.varianceFilter, 'value' ).name( 'varianceFilter' ).min( 0 ).max( 1000 ).step( 1.0 );
           gui.close();
           
-          
         }
                                , false );
         video.loop = true;
@@ -386,6 +385,9 @@
         renderer = new THREE.WebGLRenderer();
         renderer.setSize( window.innerWidth, window.innerHeight );
         container.appendChild( renderer.domElement );
+        
+       // var gl = renderer.context;
+       // gl.enable(gl.DEPTH_TEST);
         
         mouse = new THREE.Vector3( 0, 0, 1 );
         
