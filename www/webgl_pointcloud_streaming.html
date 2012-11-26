@@ -81,13 +81,13 @@
           
           vec4 depthColor = texture2D( map, vUv );
           
-          depth = ( depthColor.r + depthColor.g + depthColor.b ) / 3.0 ;
+          depth = depthColor.r + depthColor.g + depthColor.b ;
           
-          if (depth>0.99)
+          if (depth>(0.99*3.0))
           {
             vec4 depthColor2 = texture2D( map, vUv2 );
-            float depth2 = ( depthColor2.r + depthColor2.g + depthColor2.b ) / 3.0 ;
-            depth = 1.0+depth2;
+            float depth2 = depthColor2.r + depthColor2.g + depthColor2.b  ;
+            depth = 3.0+depth2;
           }
           
           return depth;
@@ -219,10 +219,7 @@
         
         if ( (vari>varThres) || (maskVal>0.5) ||(vUvP.x<0.0)|| (vUvP.x>0.5) || (vUvP.y<0.5) || (vUvP.y>1.0))
         {
-          color.r = 0.0;
-          color.g = 0.0;
-          color.b = 0.0;
-          color.a = 0.0;
+        discard;
         }
         else 
         {
@@ -236,10 +233,10 @@
           
           color.b = color.b * (1.0-fader)+ fader;
           
-          color.a = smoothstep( 20000.0, -20000.0, gl_FragCoord.z / gl_FragCoord.w );
+          color.a = 1.0;smoothstep( 20000.0, -20000.0, gl_FragCoord.z / gl_FragCoord.w );
+        gl_FragColor = vec4( color.r, color.g, color.b, color.a );
         }
         
-        gl_FragColor = vec4( color.r, color.g, color.b, color.a );
         
       }
       
@@ -330,7 +327,7 @@
               ,
               
               "pointSize": {
-                type: "f", value: 4 }
+                type: "f", value: 3 }
               ,
               "zOffset": {
                 type: "f", value: 2000 }
@@ -345,7 +342,7 @@
             ,
             vertexShader: document.getElementById( 'vs' ).textContent,
             fragmentShader: document.getElementById( 'fs' ).textContent,
-            depthWrite: false
+            depthWrite: true
             
           }
                                              );
