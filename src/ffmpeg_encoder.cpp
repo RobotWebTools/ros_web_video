@@ -100,9 +100,6 @@ const std::string& FFMPEGEncoder::getRefID()
 
 void FFMPEGEncoder::getVideoPacket(std::vector<uint8_t>& buf)
 {
-  if (!init_)
-    return;
-
   {
     boost::unique_lock<boost::mutex> lock(encoding_data_mutex_);
 
@@ -114,8 +111,6 @@ void FFMPEGEncoder::getVideoPacket(std::vector<uint8_t>& buf)
 
 void FFMPEGEncoder::getHeader(std::vector<uint8_t>& buf)
 {
-  if (!init_)
-      return;
   {
     boost::unique_lock<boost::mutex> lock(encoding_header_mutex_);
     while (!header_ready_)
@@ -209,19 +204,21 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
 
       if (!ffmpeg_)
       {
-        boost::lock_guard < boost::mutex > lock(encoding_header_mutex_);
+        {
+          boost::lock_guard < boost::mutex > lock(encoding_header_mutex_);
 
-        // ffmpeg wrapper has not been initialized yet
-        ffmpeg_ = new FFMPEG_Wrapper();
+          // ffmpeg wrapper has not been initialized yet
+          ffmpeg_ = new FFMPEG_Wrapper();
 
-        // first input frame defines resolution
-        ffmpeg_->init(frame->width, frame->height, config_);
+          // first input frame defines resolution
+          ffmpeg_->init(frame->width, frame->height, config_);
 
-        // retrieve header data from ffmpeg wrapper
-        ffmpeg_->get_header(header_buf_);
+          // retrieve header data from ffmpeg wrapper
+          ffmpeg_->get_header(header_buf_);
 
-        if (header_buf_.size() > 0)
-          header_ready_ = true;
+          if (header_buf_.size() > 0)
+            header_ready_ = true;
+        }
 
         condHeader_.notify_all();
         ROS_DEBUG("Codec header received: %d bytes", (int)header_buf_.size());
