@@ -66,6 +66,7 @@ FFMPEGEncoder::FFMPEGEncoder(const std::string& refID,
     header_buf_(),
     video_buf_(),
     frameID_(0),
+    init_(false),
     ffmpeg_(0)
 {
   start();
@@ -99,22 +100,31 @@ const std::string& FFMPEGEncoder::getRefID()
 
 void FFMPEGEncoder::getVideoPacket(std::vector<uint8_t>& buf)
 {
-  boost::unique_lock<boost::mutex> lock(encoding_data_mutex_);
+  if (!init_)
+    return;
 
-  condData_.wait(lock);
+  {
+    boost::unique_lock<boost::mutex> lock(encoding_data_mutex_);
 
-  buf = video_buf_;
+    condData_.wait(lock);
+
+    buf = video_buf_;
+  }
 }
 
 void FFMPEGEncoder::getHeader(std::vector<uint8_t>& buf)
 {
-  boost::unique_lock<boost::mutex> lock(encoding_header_mutex_);
-  while (!header_ready_)
+  if (!init_)
+      return;
   {
-    condHeader_.wait(lock);
-  }
+    boost::unique_lock<boost::mutex> lock(encoding_header_mutex_);
+    while (!header_ready_)
+    {
+      condHeader_.wait(lock);
+    }
 
-  buf = header_buf_;
+    buf = header_buf_;
+  }
 }
 
 void FFMPEGEncoder::convertFloatingPointImageToMono8(float* input,
@@ -199,27 +209,27 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
 
       if (!ffmpeg_)
       {
+        boost::lock_guard < boost::mutex > lock(encoding_header_mutex_);
+
         // ffmpeg wrapper has not been initialized yet
         ffmpeg_ = new FFMPEG_Wrapper();
 
         // first input frame defines resolution
         ffmpeg_->init(frame->width, frame->height, config_);
-        {
-          {
-            boost::lock_guard<boost::mutex> lock(encoding_header_mutex_);
 
-            // retrieve header data from ffmpeg wrapper
-            ffmpeg_->get_header(header_buf_);
+        // retrieve header data from ffmpeg wrapper
+        ffmpeg_->get_header(header_buf_);
 
-            if (header_buf_.size() > 0)
-              header_ready_ = true;
-          }
+        if (header_buf_.size() > 0)
+          header_ready_ = true;
 
-          condHeader_.notify_all();
-          ROS_DEBUG("Codec header received: %d bytes", (int)header_buf_.size());
+        condHeader_.notify_all();
+        ROS_DEBUG("Codec header received: %d bytes", (int)header_buf_.size());
 
-          subscriber_.emptyQueue();
-        }
+        subscriber_.emptyQueue();
+
+        // FFMPEG initialized
+        init_=true;
       }
 
       std::vector<uint8_t> frame_buf_temp;

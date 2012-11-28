@@ -125,6 +125,8 @@ private:
   std::vector<uint8_t> video_buf_;
   // current frame ID
   unsigned frameID_;
+  // init flag
+  bool init_;
 
   // ffmpeg wrapper instance
   FFMPEG_Wrapper* ffmpeg_;
