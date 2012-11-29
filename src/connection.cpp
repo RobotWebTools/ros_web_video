@@ -329,7 +329,7 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
   reply_.content += server_conf_.address_+":"+boost::lexical_cast<std::string>(config.port_);
   reply_.content += STREAM_PATH;
   reply_.content += image_topic;
-  reply_.content +="?enc=";
+  reply_.content +=".webm?enc=";
   reply_.content +=config.codec_;
   reply_.content +="&bitrate=";
   reply_.content +=boost::lexical_cast<std::string>( config.bitrate_ );
@@ -476,7 +476,7 @@ void connection::handleRead(const boost::system::error_code& e,
       {
         std::string request_topic = request_path.substr(strlen(STREAM_PATH));
 
-        std::string image_topic = request_topic.substr(0, request_topic.find("?"));
+        std::string image_topic = request_topic.substr(0, request_topic.find(".webm?"));
         std::string parameter_req = request_topic.substr(request_topic.find("?")+1);
 
         // check for requested stream

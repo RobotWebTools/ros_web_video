@@ -309,10 +309,6 @@ public:
       }
     }
 
-    {
-
-    }
-
     pub_.publish(output_msg);
 
   }
