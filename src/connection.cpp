@@ -356,8 +356,6 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
 
 void connection::getStreamingParametersFromURL(const std::string url, ServerConfiguration& config)
 {
-  config.depth_encoding_ = false;
-
   std::vector<std::string> parameters;
   boost::split(parameters,url,boost::is_any_of("&"));
   BOOST_FOREACH( const std::string& p, parameters )
@@ -380,11 +378,6 @@ void connection::getStreamingParametersFromURL(const std::string url, ServerConf
         {
           config.codec_ = setting[1] ;
         } else
-        if (!setting[0].compare("depth_to_rgb"))
-        {
-          config.depth_encoding_ = true;
-        }
-        else
         if (!setting[0].compare("width"))
         {
           config.frame_width_ = boost::lexical_cast<int>( setting[1] );
@@ -499,12 +492,11 @@ void connection::handleRead(const boost::system::error_code& e,
           streaming_thread_ = boost::shared_ptr<boost::thread>(
               new boost::thread( boost::bind(&connection::streamingWorkerThread, shared_from_this(), image_topic, config )  ) );
 
-          ROS_INFO("Starting encoder for topic %s (codec: %s, bitrate: %d, framerate: %d, transcoding: %s)",
+          ROS_INFO("Starting encoder for topic %s (codec: %s, bitrate: %d, framerate: %d)",
                    image_topic.c_str(),
                    config.codec_.c_str(),
                    config.bitrate_,
-                   config.framerate_,
-                   config.depth_encoding_?"DepthToRGB":"No");
+                   config.framerate_);
 
           return;
         }

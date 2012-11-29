@@ -93,23 +93,6 @@ private:
                                         const std::size_t height,
                                         std::vector<uint8_t>& output);
 
-  // method to encode raw data into rgb8 format (used for depth map encoding)
-  template<typename T>
-  void encodeDepthImageToRGB8 (T* input,
-                                const std::size_t width,
-                                const std::size_t height,
-                                std::vector<uint8_t>& output);
-
-  // method to crop/resize input frame
-  void cropFrame(sensor_msgs::ImageConstPtr input,
-                  sensor_msgs::ImagePtr output,
-                  std::size_t width,
-                  std::size_t height);
-
-  // method to crop/resize input frame
-  void createPointCloudDataFrame(sensor_msgs::ImageConstPtr input,
-                                 sensor_msgs::ImagePtr output);
-
   // encoding thread running?
   bool doEncoding_;
 
@@ -142,6 +125,8 @@ private:
   std::vector<uint8_t> video_buf_;
   // current frame ID
   unsigned frameID_;
+  // init flag
+  bool init_;
 
   // ffmpeg wrapper instance
   FFMPEG_Wrapper* ffmpeg_;

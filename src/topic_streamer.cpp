@@ -51,7 +51,6 @@ void showConfig(const ros_http_video_streamer::ServerConfiguration& config)
   std::cout << "        Codec: " << config.codec_ << std::endl;
   std::cout << "        Bitrate: " << config.bitrate_ << std::endl;
   std::cout << "        Framerate: " << config.framerate_ << std::endl;
-  std::cout << "        Depth encoding: " << std::string(config.depth_encoding_ ? "yes" : "no") << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -78,9 +77,6 @@ int main(int argc, char* argv[])
 
   // read default frame rate from param server
   priv_nh_.param<int>("framerate", server_conf.framerate_, server_conf.framerate_);
-
-  // read depth_encoding option from param server
-  priv_nh_.param<bool>("depth_encoding", server_conf.depth_encoding_, server_conf.depth_encoding_);
 
   // read quality parameter from param server
   priv_nh_.param<int>("quality", server_conf.quality_, server_conf.quality_);

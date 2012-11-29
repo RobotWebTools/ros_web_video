@@ -78,8 +78,7 @@ public:
                         "FW:"+boost::lexical_cast<std::string>(config.frame_width_) +
                         "FH:"+boost::lexical_cast<std::string>(config.frame_height_) +
                         "Q:"+boost::lexical_cast<std::string>(config.quality_) +
-                        "GOP:"+boost::lexical_cast<std::string>(config.gop_) +
-                        "T:"+(config.depth_encoding_ ? "DepthRGBTranscoding" : "NoTranscoding");
+                        "GOP:"+boost::lexical_cast<std::string>(config.gop_);
 
     FFMPEGEncoder::ptr image_encoder;
 

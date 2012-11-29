@@ -256,13 +256,13 @@ public:
 
         for (x=left_x; x<width_x; ++x)
         {
-          uint8_t depth_pix_low;
-          uint8_t depth_pix_high;
+          uint16_t depth_pix_low;
+          uint16_t depth_pix_high;
 
           if (*depth_ptr==*depth_ptr) // valid point
           {
-            depth_pix_low = std::min(std::max(0.0f,(*depth_ptr/2.0f)*(float)0xFF), (float)0xFF);
-            depth_pix_high = std::min(std::max(0.0f,((*depth_ptr-2.0f)/2.0f)*(float)0xFF), (float)0xFF);
+            depth_pix_low = std::min(std::max(0.0f,(*depth_ptr/2.0f)*(float)(0xFF*3)), (float)(0xFF*3));
+            depth_pix_high = std::min(std::max(0.0f,((*depth_ptr-2.0f)/2.0f)*(float)(0xFF)*3), (float)(0xFF*3));
           } else
           {
             depth_pix_low = 0;
@@ -281,13 +281,31 @@ public:
             memset(mask_pix_ptr, 0xFF, pix_size);
           }
 
-          *out_depth_low_ptr = depth_pix_low; ++out_depth_low_ptr;
-          *out_depth_low_ptr = depth_pix_low; ++out_depth_low_ptr;
-          *out_depth_low_ptr = depth_pix_low; ++out_depth_low_ptr;
+          uint8_t depth_pix_low_r = depth_pix_low/3;
+          uint8_t depth_pix_low_g = depth_pix_low/3;
+          uint8_t depth_pix_low_b = depth_pix_low/3;
 
-          *out_depth_high_ptr = depth_pix_high; ++out_depth_high_ptr;
-          *out_depth_high_ptr = depth_pix_high; ++out_depth_high_ptr;
-          *out_depth_high_ptr = depth_pix_high; ++out_depth_high_ptr;
+          if (depth_pix_low%3==1)
+            ++depth_pix_low_r;
+          if (depth_pix_low%3==2)
+            ++depth_pix_low_g;
+
+          *out_depth_low_ptr = depth_pix_low_r; ++out_depth_low_ptr;
+          *out_depth_low_ptr = depth_pix_low_g; ++out_depth_low_ptr;
+          *out_depth_low_ptr = depth_pix_low_b; ++out_depth_low_ptr;
+
+          uint8_t depth_pix_high_r = depth_pix_high/3;
+          uint8_t depth_pix_high_g = depth_pix_high/3;
+          uint8_t depth_pix_high_b = depth_pix_high/3;
+
+          if ((depth_pix_high%3)==1)
+            ++depth_pix_high_r;
+          if ((depth_pix_high%3)==2)
+            ++depth_pix_high_g;
+
+          *out_depth_high_ptr = depth_pix_high_r; ++out_depth_high_ptr;
+          *out_depth_high_ptr = depth_pix_high_g; ++out_depth_high_ptr;
+          *out_depth_high_ptr = depth_pix_high_b; ++out_depth_high_ptr;
 
           if (color_ptr)
           {
