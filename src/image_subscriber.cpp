@@ -56,10 +56,14 @@ ImageSubscriber::ImageSubscriber(const std::string& topic) :
 
 ImageSubscriber::~ImageSubscriber()
 {
+  sub_.shutdown();
 }
 
 void ImageSubscriber::subscribe()
 {
+  boost::mutex::scoped_lock lock(frame_mutex_);
+
+  sub_.shutdown();
   sub_ = nh.subscribe(topic_, 1, &ImageSubscriber::image_cb, this);
 
   emptyQueue();
@@ -67,8 +71,6 @@ void ImageSubscriber::subscribe()
 
 void ImageSubscriber::emptyQueue()
 {
-  boost::mutex::scoped_lock lock(frame_mutex_);
-
   frame_queue_.clear();
 }
 

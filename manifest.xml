@@ -10,7 +10,7 @@
   <url>http://ros.org/wiki/http_video_streamer</url>
   
   <depend package="sensor_msgs"/>
-
+  <depend package="image_transport"/>
 </package>
 
 
