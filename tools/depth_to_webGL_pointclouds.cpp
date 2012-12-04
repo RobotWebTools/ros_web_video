@@ -66,11 +66,11 @@ public:
   {
     // read depth map topic from param server
     std::string depthmap_topic;
-    nh_.param<std::string>("depth", depthmap_topic, "/camera/depth_registered/image");
+    nh_.param<std::string>("depth", depthmap_topic, "/head_camera/depth_registered/image");
 
     // read depth map topic from param server
     std::string rgb_image_topic;
-    nh_.param<std::string>("rgb", rgb_image_topic, "/camera/rgb/image_rect_color");
+    nh_.param<std::string>("rgb", rgb_image_topic, "/head_camera/rgb/image_rect_color");
 
     subscribe(depthmap_topic, rgb_image_topic);
 
@@ -98,8 +98,8 @@ public:
 
          // connect message filters to synchronizer
          sync_depth_color_->connectInput(*depth_sub_, *color_sub_);
-         sync_depth_color_->setInterMessageLowerBound(0, ros::Duration(0.5));
-         sync_depth_color_->setInterMessageLowerBound(1, ros::Duration(0.5));
+         sync_depth_color_->setInterMessageLowerBound(0, ros::Duration(1.5));
+         sync_depth_color_->setInterMessageLowerBound(1, ros::Duration(1.5));
          sync_depth_color_->registerCallback(boost::bind(&DepthRGBEncoder::depth_with_color_cb, this, _1, _2));
        } else
        {
@@ -115,6 +115,7 @@ public:
 
   void depth_with_color_cb(const sensor_msgs::ImageConstPtr& depth_msg, const sensor_msgs::ImageConstPtr& color_msg)
   {
+    ROS_INFO("Image depth/color pair received");
     process(depth_msg, color_msg, crop_size_);
   }
 

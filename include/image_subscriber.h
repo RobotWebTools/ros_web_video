@@ -46,8 +46,7 @@
 
 #include "ros/ros.h"
 
-#include <image_transport/image_transport.h>
-#include <image_transport/subscriber_filter.h>
+#include <sensor_msgs/Image.h>
 
 namespace ros_http_video_streamer
 {
@@ -77,15 +76,15 @@ namespace ros_http_video_streamer
     void image_cb(const sensor_msgs::ImageConstPtr& msg);
     // reset connection
     void reset();
+    // subscribe
+    void subscribe();
 
     // ROS topic
     const std::string topic_;
 
     // ROS node handle
     ros::NodeHandle nh;
-    // ROS image transport & subscriber
-    image_transport::ImageTransport it;
-    boost::shared_ptr<image_transport::SubscriberFilter> sub;
+    ros::Subscriber sub_;
 
     // mutex to protect image queue
     boost::mutex frame_mutex_;

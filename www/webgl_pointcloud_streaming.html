@@ -42,6 +42,9 @@
     <script src="./three.min.js">
     </script>
     
+    <script src="js/OrbitControls.js">
+    </script>
+    
     <script src='js/libs/DAT.GUI.min.js'>
     </script>
     
@@ -81,13 +84,13 @@
           
           vec4 depthColor = texture2D( map, vUv );
           
-          depth = depthColor.r + depthColor.g + depthColor.b ;
+          depth = ( depthColor.r + depthColor.g + depthColor.b ) / 3.0 ;
           
-          if (depth>(0.99*3.0))
+          if (depth>0.99)
           {
             vec4 depthColor2 = texture2D( map, vUv2 );
-            float depth2 = depthColor2.r + depthColor2.g + depthColor2.b  ;
-            depth = 3.0+depth2;
+            float depth2 = ( depthColor2.r + depthColor2.g + depthColor2.b ) / 3.0 ;
+            depth = 0.99+depth2;
           }
           
           return depth;
@@ -169,12 +172,12 @@
           
           if (true)//depth>0.02)
           {
-            float z = ( 1.0 - depth * (-0.5) ) * (farClipping - nearClipping) + nearClipping;
+            float z = depth;//( 1.0 - depth * (-0.5) ) * (farClipping - nearClipping) + nearClipping;
             
             pos = vec4(
               ( position.x / width - 0.5 ) * z * XtoZ,
               ( position.y / height - 0.5 ) * z * YtoZ,
-              - z + zOffset,
+              - z + zOffset / 1000.0,
               1.0);
             
             
@@ -215,11 +218,11 @@
         
         vec4 color;
         
-        float varThres = 0.001-(varianceFilter/1000.0)*0.001;
+        float varThres = 0.001-(varianceFilter/3000.0)*0.001;
         
         if ( (vari>varThres) || (maskVal>0.5) ||(vUvP.x<0.0)|| (vUvP.x>0.5) || (vUvP.y<0.5) || (vUvP.y>1.0))
-        {
-        discard;
+        {  
+          discard;
         }
         else 
         {
@@ -233,10 +236,10 @@
           
           color.b = color.b * (1.0-fader)+ fader;
           
-          color.a = 1.0;smoothstep( 20000.0, -20000.0, gl_FragCoord.z / gl_FragCoord.w );
-        gl_FragColor = vec4( color.r, color.g, color.b, color.a );
+          color.a = 1.0;//smoothstep( 20000.0, -20000.0, gl_FragCoord.z / gl_FragCoord.w );
         }
         
+        gl_FragColor = vec4( color.r, color.g, color.b, color.a );
         
       }
       
@@ -250,6 +253,8 @@
       var geometry, cube, mesh, material;
       var mouse, center;
       var stats;
+
+      var camControls;
       
       var video, texture;
       
@@ -277,7 +282,7 @@
         
         camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 5000000 );
         camera.position.set( 0, 0, 800 );
-        
+
         scene = new THREE.Scene();
         center = new THREE.Vector3();
         center.z = - 1000;
@@ -292,7 +297,7 @@
           var width = 1024, height = 1024;
           var nearClipping = 1200,/*850*850*/ farClipping = 5000/*4000*/;
           var colorFader = 0;
-          var varianceFilter = 850;
+          var varianceFilter = 2950;
           
           geometry = new THREE.Geometry();
           
@@ -330,7 +335,7 @@
                 type: "f", value: 3 }
               ,
               "zOffset": {
-                type: "f", value: 2000 }
+                type: "f", value: 1000 }
               ,
               "colorFader": {
                 type: "f", value: colorFader }
@@ -342,7 +347,7 @@
             ,
             vertexShader: document.getElementById( 'vs' ).textContent,
             fragmentShader: document.getElementById( 'fs' ).textContent,
-            depthWrite: true
+            //depthWrite: false
             
           }
                                              );
@@ -370,13 +375,13 @@
           gui.add( material.uniforms.pointSize, 'value' ).name( 'pointSize' ).min( 1 ).max( 10 ).step( 1.0 );
           gui.add( material.uniforms.zOffset, 'value' ).name( 'zOffset' ).min( 0 ).max( 8000 ).step( 1.0 );
           gui.add( material.uniforms.colorFader, 'value' ).name( 'colorFader' ).min( 0 ).max( 100 ).step( 1.0 );
-          gui.add( material.uniforms.varianceFilter, 'value' ).name( 'varianceFilter' ).min( 0 ).max( 1000 ).step( 1.0 );
+          gui.add( material.uniforms.varianceFilter, 'value' ).name( 'varianceFilter' ).min( 0 ).max( 3000 ).step( 1.0 );
           gui.close();
           
         }
                                , false );
         video.loop = true;
-        video.src = '/streams/depth_color_combined';//kinect-cp.webm';
+        video.src = '/streams/head_camera/depth_color_combined.webm?';//kinect-cp.webm';
         video.play();
         
         renderer = new THREE.WebGLRenderer();
@@ -386,14 +391,17 @@
        // var gl = renderer.context;
        // gl.enable(gl.DEPTH_TEST);
         
-        mouse = new THREE.Vector3( 0, 0, 1 );
+        //mouse = new THREE.Vector3( 0, 0, 1 );
         
-        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        //document.addEventListener( 'mousemove', onDocumentMouseMove, false );
         
         //
         
         window.addEventListener( 'resize', onWindowResize, false );
         
+	camControls = new THREE.OrbitControls( camera );
+	camControls.zoomIn( 300 );
+	camControls.userZoomSpeed = 3.0;
       }
       
       function onWindowResize() {
@@ -416,6 +424,7 @@
         
         requestAnimationFrame( animate );
         
+	camControls.update();
         render();
         stats.update();
         
@@ -423,9 +432,9 @@
       
       function render() {
         
-        camera.position.x += ( mouse.x - camera.position.x ) * 0.05;
-        camera.position.y += ( - mouse.y - camera.position.y ) * 0.05;
-        camera.lookAt( center );
+        //camera.position.x += ( mouse.x - camera.position.x ) * 0.05;
+        //camera.position.y += ( - mouse.y - camera.position.y ) * 0.05;
+        //camera.lookAt( center );
         
         renderer.render( scene, camera );
         

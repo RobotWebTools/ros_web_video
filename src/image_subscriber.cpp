@@ -44,20 +44,25 @@ namespace ros_http_video_streamer
 ImageSubscriber::ImageSubscriber(const std::string& topic) :
     topic_(topic),
     nh(""),
-    it(nh),
-    sub(),
+    sub_(),
     frame_mutex_(),
     frame_queue_()
 {
   if (!topic.empty())
   {
-    reset();
+    subscribe();
   }
 }
 
 ImageSubscriber::~ImageSubscriber()
 {
-  sub.reset();
+}
+
+void ImageSubscriber::subscribe()
+{
+  sub_ = nh.subscribe(topic_, 1, &ImageSubscriber::image_cb, this);
+
+  emptyQueue();
 }
 
 void ImageSubscriber::emptyQueue()
@@ -75,13 +80,6 @@ void ImageSubscriber::image_cb(const sensor_msgs::ImageConstPtr& msg)
 
   while (frame_queue_.size() > IMAGE_BUFFER_SIZE)
     frame_queue_.pop_back();
-}
-
-void ImageSubscriber::reset()
-{
-  sub.reset(new image_transport::SubscriberFilter());
-  sub->subscribe(it, topic_, 1, image_transport::TransportHints("raw"));
-  sub->registerCallback(boost::bind(&ImageSubscriber::image_cb, this, _1));
 }
 
 void ImageSubscriber::getImageFromQueue(sensor_msgs::ImageConstPtr& frame)

@@ -65,7 +65,7 @@ const char name_value_separator[] = { ':', ' ' };
 const char crlf[] = { '\r', '\n' };
 
 const std::string ok =
-  "HTTP/1.0 200 OK\r\n";
+  "HTTP/1.1 200 OK\r\n";
 
 } // namespace misc_strings
 
@@ -133,7 +133,7 @@ void connection::sendHTTPStreamingHeaders()
 
   buffers.push_back(boost::asio::buffer("Content-Type"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("video/webm"));
+  buffers.push_back(boost::asio::buffer("video/webm; codecs=\"vp8.0, vorbis\""));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
   buffers.push_back(boost::asio::buffer("Cache-Control"));
@@ -145,7 +145,7 @@ void connection::sendHTTPStreamingHeaders()
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("Close"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-
+/*
   buffers.push_back(boost::asio::buffer("Pragma"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("no-cache"));
@@ -165,7 +165,7 @@ void connection::sendHTTPStreamingHeaders()
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("Expires"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-
+*/
 
 #ifdef HTTP_TRANSFER_ENCODING
   buffers.push_back(boost::asio::buffer("Transfer-Encoding"));
@@ -329,7 +329,7 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
   reply_.content += server_conf_.address_+":"+boost::lexical_cast<std::string>(config.port_);
   reply_.content += STREAM_PATH;
   reply_.content += image_topic;
-  reply_.content +="?enc=";
+  reply_.content +=".webm?enc=";
   reply_.content +=config.codec_;
   reply_.content +="&bitrate=";
   reply_.content +=boost::lexical_cast<std::string>( config.bitrate_ );
@@ -469,7 +469,7 @@ void connection::handleRead(const boost::system::error_code& e,
       {
         std::string request_topic = request_path.substr(strlen(STREAM_PATH));
 
-        std::string image_topic = request_topic.substr(0, request_topic.find("?"));
+        std::string image_topic = request_topic.substr(0, request_topic.find(".webm?"));
         std::string parameter_req = request_topic.substr(request_topic.find("?")+1);
 
         // check for requested stream
