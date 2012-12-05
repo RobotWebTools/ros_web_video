@@ -66,11 +66,11 @@ public:
   {
     // read depth map topic from param server
     std::string depthmap_topic;
-    nh_.param<std::string>("depth", depthmap_topic, "/head_camera/depth_registered/image");
+    nh_.param<std::string>("depth", depthmap_topic, "/camera/depth_registered/image");
 
     // read depth map topic from param server
     std::string rgb_image_topic;
-    nh_.param<std::string>("rgb", rgb_image_topic, "/head_camera/rgb/image_rect_color");
+    nh_.param<std::string>("rgb", rgb_image_topic, "/camera/rgb/image_color");
 
     subscribe(depthmap_topic, rgb_image_topic);
 
