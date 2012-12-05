@@ -255,6 +255,8 @@ void FFMPEG_Wrapper::shutdown()
 
   avcodec_close(ffmpeg_codec_context_);
 
+  sws_freeContext(ffmpeg_sws_ctx_);
+
   if (ffmpeg_frame_)
     av_free(ffmpeg_frame_);
 
@@ -262,6 +264,7 @@ void FFMPEG_Wrapper::shutdown()
     av_free(ffmpeg_render_buf_);
 
   if (ffmpeg_format_context_)
+  {
     /* Free the streams. */
     for (i = 0; i < ffmpeg_format_context_->nb_streams; i++)
     {
@@ -269,14 +272,18 @@ void FFMPEG_Wrapper::shutdown()
       av_freep(&ffmpeg_format_context_->streams[i]);
     }
 
-  av_free(ffmpeg_format_context_);
-  av_free(ffmpeg_codec_context_);
+     avformat_free_context(ffmpeg_format_context_);
+  }
+  // Close the codec
+
 
   if (ffmpeg_src_picture_)
     delete(ffmpeg_src_picture_);
 
   if (ffmpeg_dst_picture_)
     delete(ffmpeg_dst_picture_);
+
+
 }
 
 void FFMPEG_Wrapper::encode_bgr_frame(uint8_t *bgr_data, std::vector<uint8_t>& encoded_frame)
@@ -380,6 +387,8 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
   {
     encoded_frame.clear();
   }
+
+  av_free_packet(&pkt);
 
   //ffmpeg_frame_->pts++;
   ffmpeg_frame_->pts += av_rescale_q(1, ffmpeg_codec_context_->time_base, ffmpeg_video_st_->time_base);
