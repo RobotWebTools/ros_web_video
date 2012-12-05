@@ -46,7 +46,9 @@
 
 #include "ros/ros.h"
 
-#include <sensor_msgs/Image.h>
+#include <image_transport/image_transport.h>
+#include <image_transport/subscriber_filter.h>
+
 
 namespace ros_http_video_streamer
 {
@@ -84,7 +86,9 @@ namespace ros_http_video_streamer
 
     // ROS node handle
     ros::NodeHandle nh;
-    ros::Subscriber sub_;
+    // ROS image transport & subscriber
+    image_transport::ImageTransport it;
+    boost::shared_ptr<image_transport::SubscriberFilter> sub;
 
     // mutex to protect image queue
     boost::mutex frame_mutex_;

@@ -44,7 +44,8 @@ namespace ros_http_video_streamer
 ImageSubscriber::ImageSubscriber(const std::string& topic) :
     topic_(topic),
     nh(""),
-    sub_(),
+    it(nh),
+    sub(),
     frame_mutex_(),
     frame_queue_()
 {
@@ -56,15 +57,19 @@ ImageSubscriber::ImageSubscriber(const std::string& topic) :
 
 ImageSubscriber::~ImageSubscriber()
 {
-  sub_.shutdown();
+  boost::mutex::scoped_lock lock(frame_mutex_);
+  sub.reset();
 }
 
 void ImageSubscriber::subscribe()
 {
   boost::mutex::scoped_lock lock(frame_mutex_);
 
-  sub_.shutdown();
-  sub_ = nh.subscribe(topic_, 1, &ImageSubscriber::image_cb, this);
+
+  sub.reset(new image_transport::SubscriberFilter());
+  sub->subscribe(it, topic_, 1, image_transport::TransportHints("raw"));
+  sub->registerCallback(boost::bind(&ImageSubscriber::image_cb, this, _1));
+
 
   emptyQueue();
 }
