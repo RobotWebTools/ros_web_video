@@ -71,8 +71,8 @@ public:
 
     ++request_counter_;
 
-    std::string refID = topic +
-                        config.codec_ +
+    std::string refID = topic + ":" +
+                        config.codec_ + ":" +
                         "BR:"+boost::lexical_cast<std::string>(config.bitrate_) +
                         "FR:"+boost::lexical_cast<std::string>(config.framerate_) +
                         "FW:"+boost::lexical_cast<std::string>(config.frame_width_) +
@@ -134,6 +134,8 @@ public:
 
       if (!encInfo.listener_count_)
         image_encoder_map_.erase(refID);
+
+      ROS_INFO("Deleting encoder: %s", refID.c_str());
     }
   }
 

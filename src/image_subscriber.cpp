@@ -57,7 +57,7 @@ ImageSubscriber::ImageSubscriber(const std::string& topic) :
 
 ImageSubscriber::~ImageSubscriber()
 {
-  boost::mutex::scoped_lock lock(frame_mutex_);
+//  boost::mutex::scoped_lock lock(frame_mutex_);
   sub.reset();
 }
 

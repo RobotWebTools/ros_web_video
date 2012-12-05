@@ -253,7 +253,6 @@ void FFMPEG_Wrapper::shutdown()
 {
   unsigned int i;
 
-  avcodec_close(ffmpeg_codec_context_);
 
   sws_freeContext(ffmpeg_sws_ctx_);
 
@@ -268,21 +267,23 @@ void FFMPEG_Wrapper::shutdown()
     /* Free the streams. */
     for (i = 0; i < ffmpeg_format_context_->nb_streams; i++)
     {
+      avcodec_close(ffmpeg_format_context_->streams[i]->codec);
+      av_freep(&ffmpeg_format_context_->streams[i]->metadata);
+      av_freep(&ffmpeg_format_context_->streams[i]->codec->extradata);
       av_freep(&ffmpeg_format_context_->streams[i]->codec);
       av_freep(&ffmpeg_format_context_->streams[i]);
+
     }
 
      avformat_free_context(ffmpeg_format_context_);
   }
   // Close the codec
+  avcodec_close(ffmpeg_codec_context_);
 
-
-  if (ffmpeg_src_picture_)
-    delete(ffmpeg_src_picture_);
-
-  if (ffmpeg_dst_picture_)
-    delete(ffmpeg_dst_picture_);
-
+  av_free(ffmpeg_src_picture_->data[0]);
+  av_free(ffmpeg_src_picture_);
+  av_free(ffmpeg_dst_picture_->data[0]);
+  av_free(ffmpeg_dst_picture_);
 
 }
 
