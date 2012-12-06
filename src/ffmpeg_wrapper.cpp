@@ -276,12 +276,15 @@ void FFMPEG_Wrapper::shutdown()
        avformat_free_context(ffmpeg_format_context_);
     }
     // Close the codec
-    avcodec_close(ffmpeg_codec_context_);
+    if (ffmpeg_codec_context_)
+      avcodec_close(ffmpeg_codec_context_);
 
    // av_free(ffmpeg_src_picture_->data[0]);
-    av_free(ffmpeg_src_picture_);
+    if (ffmpeg_src_picture_)
+      av_free(ffmpeg_src_picture_);
   //  av_free(ffmpeg_dst_picture_->data[0]);
-    av_free(ffmpeg_dst_picture_);
+    if (ffmpeg_dst_picture_)
+      av_free(ffmpeg_dst_picture_);
 
     if (ffmpeg_sws_ctx_)
       sws_freeContext(ffmpeg_sws_ctx_);
