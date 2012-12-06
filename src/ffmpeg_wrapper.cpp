@@ -77,13 +77,13 @@ FFMPEG_Wrapper::FFMPEG_Wrapper() :
     ffmpeg_video_st_(0),
     ffmpeg_frame_(0),
     ffmpeg_video_pts_(0.0),
-    ffmpeg_render_buf_(0),
     ffmpeg_sws_ctx_(0),
     config_(),
     input_width_(-1),
     input_height_(-1),
     output_width_(-1),
-    output_height_(-1)
+    output_height_(-1),
+    init_(false)
 {
 }
 
@@ -96,6 +96,7 @@ void FFMPEG_Wrapper::init(int input_width,
                           int input_height,
                           const ServerConfiguration& config)
 {
+  boost::mutex::scoped_lock lock(frame_mutex_);
 
   config_  = config;
 
@@ -209,10 +210,6 @@ void FFMPEG_Wrapper::init(int input_width,
           exit(1);
       }
 
-      if (!(ffmpeg_format_context_->oformat->flags & AVFMT_RAWPICTURE)) {
-          ffmpeg_render_buf_      = (uint8_t*)av_malloc(CODER_BUF_SIZE);
-      }
-
       /* allocate and init a re-usable ffmpeg_frame_ */
       ffmpeg_frame_ = avcodec_alloc_frame();
       if (!ffmpeg_frame_) {
@@ -246,45 +243,52 @@ void FFMPEG_Wrapper::init(int input_width,
       if (ffmpeg_frame_)
           ffmpeg_frame_->pts = 0;
   }
+
+  init_ = true;
 }
 
 
 void FFMPEG_Wrapper::shutdown()
 {
-  unsigned int i;
+  boost::mutex::scoped_lock lock(frame_mutex_);
 
-
-  sws_freeContext(ffmpeg_sws_ctx_);
-
-  if (ffmpeg_frame_)
-    av_free(ffmpeg_frame_);
-
-  if (ffmpeg_render_buf_)
-    av_free(ffmpeg_render_buf_);
-
-  if (ffmpeg_format_context_)
+  if (init_)
   {
-    /* Free the streams. */
-    for (i = 0; i < ffmpeg_format_context_->nb_streams; i++)
+    unsigned int i;
+
+
+    if (ffmpeg_frame_)
+      avcodec_free_frame(&ffmpeg_frame_);
+
+    if (ffmpeg_format_context_)
     {
-      avcodec_close(ffmpeg_format_context_->streams[i]->codec);
-      av_freep(&ffmpeg_format_context_->streams[i]->metadata);
-      av_freep(&ffmpeg_format_context_->streams[i]->codec->extradata);
-      av_freep(&ffmpeg_format_context_->streams[i]->codec);
-      av_freep(&ffmpeg_format_context_->streams[i]);
+      /* Free the streams. */
+   /*   for (i = 0; i < ffmpeg_format_context_->nb_streams; i++)
+      {
+        avcodec_close(ffmpeg_format_context_->streams[i]->codec);
+        av_freep(&ffmpeg_format_context_->streams[i]->metadata);
+        av_freep(&ffmpeg_format_context_->streams[i]->codec->extradata);
+        av_freep(&ffmpeg_format_context_->streams[i]->codec);
+        av_freep(&ffmpeg_format_context_->streams[i]);
 
+      }*/
+
+       avformat_free_context(ffmpeg_format_context_);
     }
+    // Close the codec
+    avcodec_close(ffmpeg_codec_context_);
 
-     avformat_free_context(ffmpeg_format_context_);
+   // av_free(ffmpeg_src_picture_->data[0]);
+    av_free(ffmpeg_src_picture_);
+  //  av_free(ffmpeg_dst_picture_->data[0]);
+    av_free(ffmpeg_dst_picture_);
+
+    if (ffmpeg_sws_ctx_)
+      sws_freeContext(ffmpeg_sws_ctx_);
+
+    init_ = false;
+
   }
-  // Close the codec
-  avcodec_close(ffmpeg_codec_context_);
-
-  av_free(ffmpeg_src_picture_->data[0]);
-  av_free(ffmpeg_src_picture_);
-  av_free(ffmpeg_dst_picture_->data[0]);
-  av_free(ffmpeg_dst_picture_);
-
 }
 
 void FFMPEG_Wrapper::encode_bgr_frame(uint8_t *bgr_data, std::vector<uint8_t>& encoded_frame)
@@ -310,6 +314,8 @@ void FFMPEG_Wrapper::encode_mono16_frame(uint8_t *gray16_data, std::vector<uint8
 template <int CODING_FORMAT>
 void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& encoded_frame)
 {
+
+  boost::mutex::scoped_lock lock(frame_mutex_);
 
   avpicture_fill(ffmpeg_src_picture_, image_data,  (AVPixelFormat)CODING_FORMAT, input_width_,  input_height_);
 
@@ -397,6 +403,7 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
 
 void FFMPEG_Wrapper::get_header(std::vector<uint8_t>& header)
 {
+  boost::mutex::scoped_lock lock(frame_mutex_);
 
   std::size_t size;
   uint8_t* output_buf;
@@ -417,7 +424,7 @@ void FFMPEG_Wrapper::get_header(std::vector<uint8_t>& header)
       exit(1);
     }
 
-    av_dict_free(&ffmpeg_format_context_->metadata);
+    //av_dict_free(&ffmpeg_format_context_->metadata);
 
     size = avio_close_dyn_buf(ffmpeg_format_context_->pb, &output_buf);
 
@@ -433,6 +440,8 @@ void FFMPEG_Wrapper::get_trailer(std::vector<uint8_t>& trailer)
 {
   std::size_t size;
   uint8_t* output_buf;
+
+  boost::mutex::scoped_lock lock(frame_mutex_);
 
   if (avio_open_dyn_buf(&ffmpeg_format_context_->pb) >= 0)
   {

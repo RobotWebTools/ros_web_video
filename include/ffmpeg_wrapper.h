@@ -39,6 +39,7 @@
 #include <vector>
 
 #include <boost/cstdint.hpp>
+#include <boost/thread.hpp>
 
 #include "server_configuration.h"
 
@@ -100,6 +101,9 @@ private:
   template<int CODING_FORMAT>
     void encode_frame(uint8_t *image_data, std::vector<uint8_t>& encoded_frame);
 
+  // mutex to protect encoding queue
+  boost::mutex frame_mutex_;
+
   // ffmpeg contexts & configurations
   AVCodec *ffmpeg_codec_;
   AVOutputFormat *ffmpeg_output_format_;
@@ -110,7 +114,6 @@ private:
   AVStream *ffmpeg_video_st_;
   AVFrame *ffmpeg_frame_;
   double ffmpeg_video_pts_;
-  uint8_t* ffmpeg_render_buf_;
   struct SwsContext *ffmpeg_sws_ctx_;
 
   ServerConfiguration config_;
@@ -119,6 +122,8 @@ private:
   int input_height_;
   int output_width_;
   int output_height_;
+
+  bool init_;
 
 };
 

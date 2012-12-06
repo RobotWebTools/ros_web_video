@@ -87,10 +87,19 @@ void FFMPEGEncoder::start()
 
 void FFMPEGEncoder::stop()
 {
-  doEncoding_ = false;
+  if (doEncoding_)
+  {
+    doEncoding_ = false;
 
-  if (encoding_queue_thread_)
-    encoding_queue_thread_->join();
+    if (encoding_queue_thread_)
+      encoding_queue_thread_->join();
+
+    if (ffmpeg_)
+    {
+      delete (ffmpeg_);
+      ffmpeg_=0;
+    }
+  }
 }
 
 const std::string& FFMPEGEncoder::getRefID()
@@ -325,6 +334,11 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
       boost::this_thread::sleep(boost::posix_time::milliseconds(milisec_per_frame - milisec_used));
     }
   }
+
+  if (ffmpeg_)
+    delete ffmpeg_;
+
+  ffmpeg_ = 0;
 
 }
 
