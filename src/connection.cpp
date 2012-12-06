@@ -64,11 +64,17 @@ namespace misc_strings {
 const char name_value_separator[] = { ':', ' ' };
 const char crlf[] = { '\r', '\n' };
 
+#ifdef HTTP_TRANSFER_ENCODING
 const std::string ok =
   "HTTP/1.1 200 OK\r\n";
 
 } // namespace misc_strings
+#else
+const std::string ok =
+  "HTTP/1.0 200 OK\r\n";
 
+} // namespace misc_strings
+#endif
 
 struct mime_map
 {

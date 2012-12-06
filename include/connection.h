@@ -55,7 +55,7 @@
 #define STREAM_PATH "/streams"
 #define WEB_PATH "/www"
 
-#define HTTP_TRANSFER_ENCODING
+//#define HTTP_TRANSFER_ENCODING
 
 namespace ros_http_video_streamer
 {
