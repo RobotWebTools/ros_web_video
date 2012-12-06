@@ -51,6 +51,8 @@
  # include <stdint.h>
 #endif
 
+#define MILLISEC_FOR_FFMPEG_INIT (5*1000)
+
 // include ffmpeg C headers
 
 namespace ros_http_video_streamer
@@ -97,6 +99,8 @@ void FFMPEG_Wrapper::init(int input_width,
                           const ServerConfiguration& config)
 {
   boost::mutex::scoped_lock lock(frame_mutex_);
+
+  time_started_ = boost::posix_time::microsec_clock::local_time();
 
   config_  = config;
 
@@ -254,8 +258,17 @@ void FFMPEG_Wrapper::shutdown()
 
   if (init_)
   {
-    unsigned int i;
 
+    // hack to give ffmpeg enough time to initialize
+    boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_duration diff = now - time_started_;
+    unsigned int milisec_used = diff.total_milliseconds();
+
+    if (milisec_used < MILLISEC_FOR_FFMPEG_INIT)
+    {
+      // if encoder worked faster than the desired frame rate -> go sleeping
+      boost::this_thread::sleep(boost::posix_time::milliseconds(MILLISEC_FOR_FFMPEG_INIT - milisec_used));
+    }
 
     if (ffmpeg_frame_)
       avcodec_free_frame(&ffmpeg_frame_);

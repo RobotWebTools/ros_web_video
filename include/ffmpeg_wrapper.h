@@ -40,6 +40,8 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 #include "server_configuration.h"
 
@@ -122,6 +124,8 @@ private:
   int input_height_;
   int output_width_;
   int output_height_;
+
+  boost::posix_time::ptime time_started_;
 
   bool init_;
 
