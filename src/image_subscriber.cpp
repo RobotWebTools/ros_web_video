@@ -65,11 +65,9 @@ void ImageSubscriber::subscribe()
 {
   boost::mutex::scoped_lock lock(frame_mutex_);
 
-
   sub.reset(new image_transport::SubscriberFilter());
   sub->subscribe(it, topic_, 1, image_transport::TransportHints("raw"));
   sub->registerCallback(boost::bind(&ImageSubscriber::image_cb, this, _1));
-
 
   emptyQueue();
 }
@@ -83,7 +81,9 @@ void ImageSubscriber::image_cb(const sensor_msgs::ImageConstPtr& msg)
 {
   boost::mutex::scoped_lock lock(frame_mutex_);
 
-  frame_queue_.push_front(msg);
+  sensor_msgs::ImageConstPtr new_msg = sensor_msgs::ImageConstPtr(new const sensor_msgs::Image(*msg));
+
+  frame_queue_.push_front(new_msg);
 
   while (frame_queue_.size() > IMAGE_BUFFER_SIZE)
     frame_queue_.pop_back();
