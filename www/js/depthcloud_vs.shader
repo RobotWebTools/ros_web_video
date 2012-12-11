@@ -16,11 +16,6 @@
   varying float vari;
   varying float maskVal;
   
-  const float XtoZ = 1.11146;
-  // tan( 1.0144686 / 2.0 ) * 2.0;
-  const float YtoZ = 0.83359;
-  // tan( 0.7898090 / 2.0 ) * 2.0;
-  
   float sampleDepth(vec2 pos)
     {
       float depth;
