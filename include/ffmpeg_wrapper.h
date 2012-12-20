@@ -105,6 +105,7 @@ private:
 
   // mutex to protect encoding queue
   boost::mutex frame_mutex_;
+  boost::mutex codec_mutex_;
 
   // ffmpeg contexts & configurations
   AVCodec *ffmpeg_codec_;

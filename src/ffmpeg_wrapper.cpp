@@ -209,10 +209,13 @@ void FFMPEG_Wrapper::init(int input_width,
     int ret;
 
     /* open the codec */
-      if (avcodec_open2(ffmpeg_codec_context_, ffmpeg_codec_, NULL) < 0) {
-          fprintf(stderr, "Could not open video codec\n");
-          exit(1);
-      }
+      {
+         boost::mutex::scoped_lock lock(codec_mutex_);
+         if (avcodec_open2(ffmpeg_codec_context_, ffmpeg_codec_, NULL) < 0) {
+             fprintf(stderr, "Could not open video codec\n");
+             exit(1);
+         }
+      }  
 
       /* allocate and init a re-usable ffmpeg_frame_ */
       ffmpeg_frame_ = avcodec_alloc_frame();
@@ -274,7 +277,10 @@ void FFMPEG_Wrapper::shutdown()
 
     // Close the codec
     if (ffmpeg_codec_context_)
+    {
+      boost::mutex::scoped_lock lock(codec_mutex_);
       avcodec_close(ffmpeg_codec_context_);
+    }
 
 
     if (ffmpeg_frame_)
