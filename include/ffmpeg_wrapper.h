@@ -67,6 +67,7 @@ class AVPicture;
 class AVStream;
 class AVFrame;
 
+
 class FFMPEG_Wrapper
 {
 
@@ -102,6 +103,8 @@ private:
   // templated encoding method
   template<int CODING_FORMAT>
     void encode_frame(uint8_t *image_data, std::vector<uint8_t>& encoded_frame);
+
+  //int ff_lockmgr(void **mutex, enum AVLockOp op);
 
   // mutex to protect encoding queue
   boost::mutex frame_mutex_;

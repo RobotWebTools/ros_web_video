@@ -38,6 +38,7 @@
 #include <string>
 
 #include "ffmpeg_wrapper.h"
+#include <boost/bind.hpp>
 
 #ifdef HAVE_AV_CONFIG_H
 #undef HAVE_AV_CONFIG_H
@@ -94,6 +95,46 @@ FFMPEG_Wrapper::~FFMPEG_Wrapper()
   shutdown();
 }
 
+static int ff_lockmgr(void **mutex, enum AVLockOp op)
+{
+  if (NULL == mutex)
+    return -1;
+
+  switch (op)
+  {
+    case AV_LOCK_CREATE:
+    {
+      *mutex = NULL;
+      boost::mutex * m = new boost::mutex();
+      *mutex = static_cast<void*>(m);
+      break;
+    }
+    case AV_LOCK_OBTAIN:
+    {
+      boost::mutex * m = static_cast<boost::mutex*>(*mutex);
+      m->lock();
+      break;
+    }
+    case AV_LOCK_RELEASE:
+    {
+      boost::mutex * m = static_cast<boost::mutex*>(*mutex);
+      m->unlock();
+      break;
+    }
+    case AV_LOCK_DESTROY:
+    {
+      boost::mutex * m = static_cast<boost::mutex*>(*mutex);
+      delete m;
+      break;
+    }
+    default:
+      break;
+  }
+  return 0;
+}
+
+
+
 void FFMPEG_Wrapper::init(int input_width,
                           int input_height,
                           const ServerConfiguration& config)
@@ -115,6 +156,8 @@ void FFMPEG_Wrapper::init(int input_width,
 
   if (output_height_<0)
     output_height_ = input_height_;
+
+  av_lockmgr_register(&ff_lockmgr);
 
   /* register all the codecs */
   avcodec_register_all();
