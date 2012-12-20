@@ -335,6 +335,8 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
     }
   }
 
+  ffmpeg_->shutdown();
+
   if (ffmpeg_)
     delete ffmpeg_;
 

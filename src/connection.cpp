@@ -151,7 +151,12 @@ void connection::sendHTTPStreamingHeaders()
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("Close"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-/*
+
+  buffers.push_back(boost::asio::buffer("Access-Control-Allow-Origin"));
+  buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
+  buffers.push_back(boost::asio::buffer("*"));
+  buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+
   buffers.push_back(boost::asio::buffer("Pragma"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("no-cache"));
@@ -166,7 +171,7 @@ void connection::sendHTTPStreamingHeaders()
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("0"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-
+/*
   buffers.push_back(boost::asio::buffer("Trailer"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("Expires"));

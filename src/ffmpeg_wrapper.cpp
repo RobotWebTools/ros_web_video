@@ -262,13 +262,20 @@ void FFMPEG_Wrapper::shutdown()
     // hack to give ffmpeg enough time to initialize
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = now - time_started_;
-    unsigned int milisec_used = diff.total_milliseconds();
+    unsigned int milisec_used = std::max(500u,(unsigned int)diff.total_milliseconds());
+    std::cout<<"Sleeping"<<milisec_used<<std::endl;
 
     if (milisec_used < MILLISEC_FOR_FFMPEG_INIT)
     {
       // if encoder worked faster than the desired frame rate -> go sleeping
       boost::this_thread::sleep(boost::posix_time::milliseconds(MILLISEC_FOR_FFMPEG_INIT - milisec_used));
     }
+
+
+    // Close the codec
+    if (ffmpeg_codec_context_)
+      avcodec_close(ffmpeg_codec_context_);
+
 
     if (ffmpeg_frame_)
       avcodec_free_frame(&ffmpeg_frame_);
@@ -288,9 +295,6 @@ void FFMPEG_Wrapper::shutdown()
 
        avformat_free_context(ffmpeg_format_context_);
     }
-    // Close the codec
-    if (ffmpeg_codec_context_)
-      avcodec_close(ffmpeg_codec_context_);
 
    // av_free(ffmpeg_src_picture_->data[0]);
     if (ffmpeg_src_picture_)
