@@ -309,7 +309,6 @@ void FFMPEG_Wrapper::shutdown()
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = now - time_started_;
     unsigned int milisec_used = std::max(500u,(unsigned int)diff.total_milliseconds());
-    std::cout<<"Sleeping"<<milisec_used<<std::endl;
 
     if (milisec_used < MILLISEC_FOR_FFMPEG_INIT)
     {

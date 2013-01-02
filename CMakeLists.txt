@@ -1,27 +1,10 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
+project(ros_http_video_streamer)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE Debug)
+find_package(catkin REQUIRED roscpp rostime sensor_msgs image_transport )
+find_package(Boost COMPONENTS system filesystem thread REQUIRED)
 
-rosbuild_init()
-
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-
-include(include)
+include_directories(include ${catkin_INCLUDE_DIRS})
 
 set_source_files_properties( third_party_make PROPERTIES GENERATED true)
 add_custom_command ( OUTPUT third_party_make
@@ -30,7 +13,7 @@ add_custom_command ( OUTPUT third_party_make
 
 include_directories(include)
 include_directories(${PROJECT_SOURCE_DIR}/3rdparty/ffmpeg/)
-
+link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS})
 
 add_library(avcodec STATIC IMPORTED)
 set_property(TARGET avcodec PROPERTY
@@ -57,23 +40,31 @@ set_property(TARGET vpx PROPERTY
              IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/libvpx/libvpx.a)
 
 
-rosbuild_add_executable(${PROJECT_NAME}  third_party_make
-                                         src/ffmpeg_wrapper.cpp 
-                                         src/server.cpp
-                                         src/connection.cpp
-                                         src/topic_streamer.cpp
-                                         src/reply.cpp
-                                         src/request_parser.cpp
-                                         src/image_subscriber.cpp
-                                         src/ffmpeg_encoder.cpp
-                                         )
-                                         
-target_link_libraries(${PROJECT_NAME} avcodec avformat avutil avfilter swscale vpx bz2 z)
-rosbuild_link_boost(${PROJECT_NAME} thread signals system)       
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME} 
+  CATKIN_DEPENDS sensor_msgs image_transport
+)
 
-                                         
+add_executable(${PROJECT_NAME}  third_party_make
+                                src/ffmpeg_wrapper.cpp 
+                                src/server.cpp
+                                src/connection.cpp
+                                src/topic_streamer.cpp
+                                src/reply.cpp
+                                src/request_parser.cpp
+                                src/image_subscriber.cpp
+                                src/ffmpeg_encoder.cpp
+                                )
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx bz2 z)
+
 #common commands for building c++ executables and libraries 
-rosbuild_add_executable(webGLPointCloudTopicConverter tools/depth_to_webGL_pointclouds.cpp)                                       
-rosbuild_link_boost(webGLPointCloudTopicConverter thread signals system)       
+add_executable(webGLPointCloudTopicConverter tools/depth_to_webGL_pointclouds.cpp)                                       
+target_link_libraries(webGLPointCloudTopicConverter ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx bz2 z)    
 
-    
+install(TARGETS ${PROJECT_NAME} webGLPointCloudTopicConverter
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
