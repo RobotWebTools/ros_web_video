@@ -23,6 +23,11 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include(include)
 
+set_source_files_properties( third_party_make PROPERTIES GENERATED true)
+add_custom_command ( OUTPUT third_party_make
+    COMMAND make  
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/ )
+
 include_directories(include)
 include_directories(${PROJECT_SOURCE_DIR}/3rdparty/ffmpeg/)
 
@@ -52,7 +57,8 @@ set_property(TARGET vpx PROPERTY
              IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/libvpx/libvpx.a)
 
 
-rosbuild_add_executable(${PROJECT_NAME}  src/ffmpeg_wrapper.cpp 
+rosbuild_add_executable(${PROJECT_NAME}  third_party_make
+                                         src/ffmpeg_wrapper.cpp 
                                          src/server.cpp
                                          src/connection.cpp
                                          src/topic_streamer.cpp
