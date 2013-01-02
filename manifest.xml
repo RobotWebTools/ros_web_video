@@ -11,6 +11,8 @@
   
   <depend package="sensor_msgs"/>
   <depend package="image_transport"/>
+  <rosdep name="yasm"/>
+
 </package>
 
 
