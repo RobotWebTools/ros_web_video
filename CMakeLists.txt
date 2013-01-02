@@ -43,7 +43,7 @@ set_property(TARGET vpx PROPERTY
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME} 
-  CATKIN_DEPENDS sensor_msgs image_transport
+  CATKIN_DEPENDS sensor_msgs image_transport roscpp rostime
 )
 
 add_executable(${PROJECT_NAME}  third_party_make
