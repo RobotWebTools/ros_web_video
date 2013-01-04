@@ -51,6 +51,8 @@ void showConfig(const ros_http_video_streamer::ServerConfiguration& config)
   std::cout << "        Codec: " << config.codec_ << std::endl;
   std::cout << "        Bitrate: " << config.bitrate_ << std::endl;
   std::cout << "        Framerate: " << config.framerate_ << std::endl;
+  std::cout << "        Codec profile: " << config.profile_ << std::endl;
+  std::cout << "        Fileserver Root: " << config.wwwroot_ << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -83,6 +85,12 @@ int main(int argc, char* argv[])
 
   // read group of pictures from param server
   priv_nh_.param<int>("gop", server_conf.gop_, server_conf.gop_);
+
+  // read default encoding profile from param server
+  priv_nh_.param<std::string>("profile", server_conf.profile_, server_conf.profile_);
+
+  // read default encoding profile from param server
+  priv_nh_.param<std::string>("wwwroot", server_conf.wwwroot_, server_conf.wwwroot_);
 
   showConfig(server_conf);
 

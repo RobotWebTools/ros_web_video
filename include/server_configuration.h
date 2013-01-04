@@ -52,7 +52,9 @@ struct ServerConfiguration
       quality_(-1),
       gop_(60),
       frame_width_(-1),
-      frame_height_(-1)
+      frame_height_(-1),
+      profile_("realtime"),
+      wwwroot_("./www")
   {
   }
 
@@ -83,6 +85,10 @@ struct ServerConfiguration
   int frame_width_;
   // height of frame
   int frame_height_;
+  // codec profile
+  std::string profile_;
+  // codec profile
+  std::string wwwroot_;
 
 };
 

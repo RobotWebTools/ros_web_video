@@ -215,7 +215,7 @@ void FFMPEG_Wrapper::init(int input_width,
     ffmpeg_codec_context_->pix_fmt = PIX_FMT_YUV420P;
     ffmpeg_codec_context_->max_b_frames = 0;
 
-    av_opt_set(ffmpeg_codec_context_->priv_data, "quality", "realtime", 0);
+    av_opt_set(ffmpeg_codec_context_->priv_data, "quality", config_.profile_.c_str(), 0);
 
     av_opt_set(ffmpeg_codec_context_->priv_data, "deadline", "1", 0);
     av_opt_set(ffmpeg_codec_context_->priv_data, "auto-alt-ref", "0", 0);
@@ -309,6 +309,7 @@ void FFMPEG_Wrapper::shutdown()
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = now - time_started_;
     unsigned int milisec_used = std::max(500u,(unsigned int)diff.total_milliseconds());
+    std::cout<<"Sleeping"<<milisec_used<<std::endl;
 
     if (milisec_used < MILLISEC_FOR_FFMPEG_INIT)
     {
