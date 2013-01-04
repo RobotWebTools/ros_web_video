@@ -337,7 +337,7 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
                   "<div id=\"movie\">"
                           "<video src=\"http://";
 
-  reply_.content += server_conf_.address_+":"+boost::lexical_cast<std::string>(config.port_);
+  //reply_.content += server_conf_.address_+":"+boost::lexical_cast<std::string>(config.port_);
   reply_.content += STREAM_PATH;
   reply_.content += image_topic;
   reply_.content +=".webm?enc=";
@@ -388,6 +388,10 @@ void connection::getStreamingParametersFromURL(const std::string url, ServerConf
         if (!setting[0].compare("enc"))
         {
           config.codec_ = setting[1] ;
+        } else
+        if (!setting[0].compare("profile"))
+        {
+          config.profile_ = setting[1] ;
         } else
         if (!setting[0].compare("width"))
         {

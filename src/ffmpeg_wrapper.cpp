@@ -215,7 +215,7 @@ void FFMPEG_Wrapper::init(int input_width,
     ffmpeg_codec_context_->pix_fmt = PIX_FMT_YUV420P;
     ffmpeg_codec_context_->max_b_frames = 0;
 
-    av_opt_set(ffmpeg_codec_context_->priv_data, "quality", "realtime", 0);
+    av_opt_set(ffmpeg_codec_context_->priv_data, "quality", config_.profile_.c_str(), 0);
 
     av_opt_set(ffmpeg_codec_context_->priv_data, "deadline", "1", 0);
     av_opt_set(ffmpeg_codec_context_->priv_data, "auto-alt-ref", "0", 0);
