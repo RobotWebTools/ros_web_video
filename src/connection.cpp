@@ -270,7 +270,8 @@ void connection::getImageTopics()
     const ros::master::TopicInfo& topic = *it;
 
     // Only add topics whose type matches.
-    if( topic.datatype == image_message_type )
+    if ( ( topic.datatype == image_message_type ) &&
+          (topic.name.find("_raw")==std::string::npos ) )
     {
       image_topics_.push_back(topic.name);
     }
