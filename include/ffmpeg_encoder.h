@@ -65,13 +65,9 @@ public:
 
   virtual ~FFMPEGEncoder();
 
-  // receive new video packet
-  // this method blocks until a new video packet is available
-  void getVideoPacket(std::vector<uint8_t>& buf);
-
   // receive header data
   // this method blocks until the header data is availble from the codec
-  void getHeader(std::vector<uint8_t>& buf);
+  void initEncoding(std::vector<uint8_t>& buf);
 
   // retrieve reverence string
   const std::string& getRefID();
@@ -82,10 +78,10 @@ public:
   // stop encoding
   void stop();
 
-private:
+  // encode frame
+  void getVideoPacket(std::vector<uint8_t>& buf);
 
-  // worker thread to perform video encoding
-  void videoEncodingWorkerThread();
+private:
 
   // method to convert floating point image to 8-bit monochrome image
   void convertFloatingPointImageToMono8(float* input,
@@ -108,25 +104,12 @@ private:
   // ROS image subscriber class
   ImageSubscriber subscriber_;
 
-  // encoding thread
-  boost::thread* encoding_queue_thread_;
-
-  // mutexes to protect I/O between ffmpeg_wrapper and the http_server
-  boost::mutex encoding_header_mutex_;
-  boost::mutex encoding_data_mutex_;
-  boost::condition_variable condHeader_;
-  boost::condition_variable condData_;
-  bool header_ready_;
-  bool data_ready_;
-
-  // vector containing binary header data
-  std::vector<uint8_t> header_buf_;
-  // vector containing binary video packts
-  std::vector<uint8_t> video_buf_;
   // current frame ID
   unsigned frameID_;
   // init flag
   bool init_;
+
+  boost::posix_time::ptime last_tick;
 
   // ffmpeg wrapper instance
   FFMPEG_Wrapper* ffmpeg_;

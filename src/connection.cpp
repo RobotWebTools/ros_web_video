@@ -193,17 +193,15 @@ void connection::sendHTTPStreamingHeaders()
 void connection::streamingWorkerThread( const std::string& topic,
                                         const ServerConfiguration& config)
 {
-  FFMPEGEncoder::ptr image_encoder;
+  FFMPEGEncoder image_encoder("WebEncoder", topic, config);
 
 #ifdef HTTP_TRANSFER_ENCODING
   char hexSize[256];
 #endif
 
-   image_encoder = encoder_manager_.subscribe(topic, config);
-
    std::vector<uint8_t> header;
 
-   image_encoder->getHeader(header);
+   image_encoder.initEncoding(header);
 
    std::vector<boost::asio::const_buffer> buffers;
    sendHTTPStreamingHeaders();
@@ -230,7 +228,7 @@ void connection::streamingWorkerThread( const std::string& topic,
       buffers.clear();
       packet.clear();
 
-      image_encoder->getVideoPacket(packet);
+      image_encoder.getVideoPacket(packet);
       ROS_DEBUG("Video packet sent (%d bytes)", (int) packet.size());
 
 #ifdef HTTP_TRANSFER_ENCODING
@@ -251,8 +249,6 @@ void connection::streamingWorkerThread( const std::string& topic,
   {
     do_streaming_ = false;
   }
-
-   encoder_manager_.unsubscribe(image_encoder->getRefID());
 
    streaming_thread_.reset();
 
@@ -335,7 +331,7 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
               "<div id=\"content\">"
 
                   "<div id=\"movie\">"
-                          "<video src=\"http://";
+                          "<video src=\"";
 
   //reply_.content += server_conf_.address_+":"+boost::lexical_cast<std::string>(config.port_);
   reply_.content += STREAM_PATH;

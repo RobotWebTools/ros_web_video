@@ -44,7 +44,6 @@ struct ServerConfiguration
 {
   ServerConfiguration() :
     // DEFAULT CONFIGURATION
-      address_("localhost"),
       port_(8888),
       codec_("webm"),
       bitrate_(100000),
@@ -62,8 +61,6 @@ struct ServerConfiguration
   // Server configuration
   ////////////////////////////
 
-  // hostname/network device to listen for http requests
-  std::string address_;
   // network port
   int port_;
 

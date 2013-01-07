@@ -48,26 +48,9 @@ namespace enc = sensor_msgs::image_encodings;
 namespace ros_http_video_streamer
 {
 
-FFMPEGEncoder::FFMPEGEncoder(const std::string& refID,
-                             const std::string& topic,
-                             const ServerConfiguration& config) :
-    doEncoding_(true),
-    refID_(refID),
-    topic_(topic),
-    config_(config),
-    subscriber_(topic),
-    encoding_queue_thread_(0),
-    encoding_header_mutex_(),
-    encoding_data_mutex_(),
-    condHeader_(),
-    condData_(),
-    header_ready_(false),
-    data_ready_(false),
-    header_buf_(),
-    video_buf_(),
-    frameID_(0),
-    init_(false),
-    ffmpeg_(0)
+FFMPEGEncoder::FFMPEGEncoder(const std::string& refID, const std::string& topic, const ServerConfiguration& config) :
+    doEncoding_(true), refID_(refID), topic_(topic), config_(config), subscriber_(topic), frameID_(0), init_(false), ffmpeg_(
+        0)
 {
   start();
 }
@@ -79,27 +62,23 @@ FFMPEGEncoder::~FFMPEGEncoder()
 
 void FFMPEGEncoder::start()
 {
-  doEncoding_ = true;
-
-  // create thread for processing video encoding
-  encoding_queue_thread_ = new boost::thread(boost::bind(&FFMPEGEncoder::videoEncodingWorkerThread, this));
 }
 
 void FFMPEGEncoder::stop()
 {
+
   if (doEncoding_)
   {
     doEncoding_ = false;
 
-    if (encoding_queue_thread_)
-      encoding_queue_thread_->join();
-
     if (ffmpeg_)
     {
+      ffmpeg_->shutdown();
       delete (ffmpeg_);
-      ffmpeg_=0;
+      ffmpeg_ = 0;
     }
   }
+
 }
 
 const std::string& FFMPEGEncoder::getRefID()
@@ -107,33 +86,7 @@ const std::string& FFMPEGEncoder::getRefID()
   return refID_;
 }
 
-void FFMPEGEncoder::getVideoPacket(std::vector<uint8_t>& buf)
-{
-  {
-    boost::unique_lock<boost::mutex> lock(encoding_data_mutex_);
-
-    condData_.wait(lock);
-
-    buf = video_buf_;
-  }
-}
-
-void FFMPEGEncoder::getHeader(std::vector<uint8_t>& buf)
-{
-  {
-    boost::unique_lock<boost::mutex> lock(encoding_header_mutex_);
-    while (!header_ready_)
-    {
-      condHeader_.wait(lock);
-    }
-
-    buf = header_buf_;
-  }
-}
-
-void FFMPEGEncoder::convertFloatingPointImageToMono8(float* input,
-                                                     const std::size_t width,
-                                                     const std::size_t height,
+void FFMPEGEncoder::convertFloatingPointImageToMono8(float* input, const std::size_t width, const std::size_t height,
                                                      std::vector<uint8_t>& output)
 {
   std::size_t image_size, i;
@@ -190,16 +143,56 @@ void FFMPEGEncoder::convertFloatingPointImageToMono8(float* input,
   }
 }
 
-void FFMPEGEncoder::videoEncodingWorkerThread()
+void FFMPEGEncoder::initEncoding(std::vector<uint8_t>& header)
 {
-  // time stamps used to control the encoder rate
-  unsigned int milisec_used;
-  const unsigned int milisec_per_frame = 1000 / config_.framerate_;
+  sensor_msgs::ImageConstPtr frame;
 
-  while (doEncoding_)
+  while (!init_)
   {
+    // get frame from ROS iamge subscriber
+    subscriber_.getImageFromQueue(frame);
 
-    boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
+    if ((frame) && (!ffmpeg_))
+    {
+      // ffmpeg wrapper has not been initialized yet
+      ffmpeg_ = new FFMPEG_Wrapper();
+
+      // first input frame defines resolution
+      ffmpeg_->init(frame->width, frame->height, config_);
+
+      // retrieve header data from ffmpeg wrapper
+      ffmpeg_->get_header(header);
+
+      ROS_DEBUG("Codec header received: %d bytes", (int)header.size());
+
+      subscriber_.emptyQueue();
+
+      // FFMPEG initialized
+      init_ = true;
+
+    }
+    else
+    {
+      boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    }
+  }
+}
+
+void FFMPEGEncoder::getVideoPacket(std::vector<uint8_t>& buf)
+{
+  buf.clear();
+
+  if (!init_)
+  {
+    ROS_ERROR("Video encoding not initialized.");
+    return;
+  }
+
+  while (buf.size() == 0)
+  {
+    // time stamps used to control the encoder rate
+    unsigned int milisec_used;
+    const unsigned int milisec_per_frame = 1000 / config_.framerate_;
 
     sensor_msgs::ImageConstPtr frame;
 
@@ -210,33 +203,6 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
 
     if (frame)
     {
-
-      if (!ffmpeg_)
-      {
-        {
-          boost::lock_guard < boost::mutex > lock(encoding_header_mutex_);
-
-          // ffmpeg wrapper has not been initialized yet
-          ffmpeg_ = new FFMPEG_Wrapper();
-
-          // first input frame defines resolution
-          ffmpeg_->init(frame->width, frame->height, config_);
-
-          // retrieve header data from ffmpeg wrapper
-          ffmpeg_->get_header(header_buf_);
-
-          if (header_buf_.size() > 0)
-            header_ready_ = true;
-        }
-
-        condHeader_.notify_all();
-        ROS_DEBUG("Codec header received: %d bytes", (int)header_buf_.size());
-
-        subscriber_.emptyQueue();
-
-        // FFMPEG initialized
-        init_=true;
-      }
 
       std::vector<uint8_t> frame_buf_temp;
 
@@ -250,13 +216,13 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
           // monochrome 8-bit encoded frame
           if ((!frame->encoding.compare("mono8")) || (!frame->encoding.compare("8UC1")))
           {
-            ffmpeg_->encode_mono8_frame((uint8_t*)&frame->data[0], frame_buf_temp);
+            ffmpeg_->encode_mono8_frame((uint8_t*)&frame->data[0], buf);
           }
           else if ((!frame->encoding.compare("mono16")) || (!frame->encoding.compare("16UC1")))
           {
             // monochrome 16-bit encoded frame
 
-            ffmpeg_->encode_mono16_frame((uint8_t*)&frame->data[0], frame_buf_temp);
+            ffmpeg_->encode_mono16_frame((uint8_t*)&frame->data[0], buf);
 
           }
           else if (!frame->encoding.compare("32FC1"))
@@ -267,7 +233,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
 
             convertFloatingPointImageToMono8((float*)&frame->data[0], frame->width, frame->height, normalized_image);
 
-            ffmpeg_->encode_mono8_frame(&normalized_image[0], frame_buf_temp);
+            ffmpeg_->encode_mono8_frame(&normalized_image[0], buf);
 
           }
           else
@@ -280,13 +246,13 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
           {
             // rgb encoded frame
 
-            ffmpeg_->encode_rgb_frame((uint8_t*)&frame->data[0], frame_buf_temp);
+            ffmpeg_->encode_rgb_frame((uint8_t*)&frame->data[0], buf);
           }
           else if (frame->encoding.find("bgr") != std::string::npos)
           {
             // bgr encoded frame
 
-            ffmpeg_->encode_bgr_frame((uint8_t*)&frame->data[0], frame_buf_temp);
+            ffmpeg_->encode_bgr_frame((uint8_t*)&frame->data[0], buf);
           }
           else
           {
@@ -303,29 +269,12 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
         ROS_ERROR("Invalid image format");
       }
 
-      // check for new video packet
-      if (frame_buf_temp.size() > 0)
-      {
-        {
-          {
-            boost::lock_guard<boost::mutex> lock(encoding_data_mutex_);
-            data_ready_ = true;
-
-            // copy video data to output vector
-            video_buf_ = frame_buf_temp;
-
-            ++frameID_;
-          }
-
-          condData_.notify_all();
-          ROS_DEBUG("Frame received: %d bytes", (int)video_buf_.size());
-        }
-      }
     }
 
     // calculate encoding time
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-    boost::posix_time::time_duration diff = now - tick;
+    boost::posix_time::time_duration diff = now - last_tick;
+    last_tick = now;
     milisec_used = diff.total_milliseconds();
 
     if (milisec_used < milisec_per_frame)
@@ -335,12 +284,7 @@ void FFMPEGEncoder::videoEncodingWorkerThread()
     }
   }
 
-  ffmpeg_->shutdown();
-
-  if (ffmpeg_)
-    delete ffmpeg_;
-
-  ffmpeg_ = 0;
+  ROS_DEBUG("Frame received: %d bytes", (int)buf.size());
 
 }
 
