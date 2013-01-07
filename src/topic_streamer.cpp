@@ -46,7 +46,6 @@ void showConfig(const ros_http_video_streamer::ServerConfiguration& config)
 {
   std::cout << "ROS Http Video Streamer" << std::endl << std::endl;
   std::cout << "Settings:" << std::endl;
-  std::cout << "        Hostname: " << config.address_ << std::endl;
   std::cout << "        Port: " << config.port_ << std::endl;
   std::cout << "        Codec: " << config.codec_ << std::endl;
   std::cout << "        Bitrate: " << config.bitrate_ << std::endl;
