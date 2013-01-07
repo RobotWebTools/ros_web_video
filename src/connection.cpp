@@ -331,7 +331,7 @@ void connection::generateVideoStreamHTML(const std::string& image_topic,
               "<div id=\"content\">"
 
                   "<div id=\"movie\">"
-                          "<video src=\"http://";
+                          "<video src=\"";
 
   //reply_.content += server_conf_.address_+":"+boost::lexical_cast<std::string>(config.port_);
   reply_.content += STREAM_PATH;
