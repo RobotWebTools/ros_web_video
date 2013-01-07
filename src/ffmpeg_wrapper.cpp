@@ -305,11 +305,10 @@ void FFMPEG_Wrapper::shutdown()
   if (init_)
   {
 
-    // hack to give ffmpeg enough time to initialize
+    // give ffmpeg enough time to initialize before shutdown
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = now - time_started_;
-    unsigned int milisec_used = std::max(500u,(unsigned int)diff.total_milliseconds());
-    std::cout<<"Sleeping"<<milisec_used<<std::endl;
+    unsigned int milisec_used = std::max(100u,(unsigned int)diff.total_milliseconds());
 
     if (milisec_used < MILLISEC_FOR_FFMPEG_INIT)
     {
