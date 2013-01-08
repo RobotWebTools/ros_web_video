@@ -88,6 +88,9 @@ int main(int argc, char* argv[])
   // read default encoding profile from param server
   priv_nh_.param<std::string>("wwwroot", server_conf.wwwroot_, server_conf.wwwroot_);
 
+  // read default ROS transport scheme
+  priv_nh_.param<std::string>("transport", server_conf.ros_transport_, server_conf.ros_transport_);
+
   showConfig(server_conf);
 
   try

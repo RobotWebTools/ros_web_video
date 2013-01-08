@@ -64,7 +64,7 @@ namespace ros_http_video_streamer
     typedef boost::shared_ptr<ImageSubscriber> ptr;
 
     // Specify ROS topic in constructor
-    ImageSubscriber(const std::string& topic);
+    ImageSubscriber(const std::string& topic, const std::string& transport);
     virtual ~ImageSubscriber();
 
     // get image from receiver queue
@@ -83,6 +83,8 @@ namespace ros_http_video_streamer
 
     // ROS topic
     const std::string topic_;
+    // ROS transport scheme
+    const std::string transport_;
 
     // ROS node handle
     ros::NodeHandle nh;

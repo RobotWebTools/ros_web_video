@@ -53,7 +53,8 @@ struct ServerConfiguration
       frame_width_(-1),
       frame_height_(-1),
       profile_("realtime"),
-      wwwroot_("./www")
+      wwwroot_("./www"),
+      ros_transport_("raw")
   {
   }
 
@@ -86,6 +87,8 @@ struct ServerConfiguration
   std::string profile_;
   // codec profile
   std::string wwwroot_;
+  // ros transport
+  std::string ros_transport_;
 
 };
 

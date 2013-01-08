@@ -228,9 +228,15 @@ void FFMPEG_Wrapper::init(int input_width,
     av_opt_set(ffmpeg_codec_context_->priv_data, "error-resilient", "1", 0);
 
     // buffer size of rate controller (length: rc_buffer_size/bitrate * 1000) ms
-   // ffmpeg_codec_context_->rc_buffer_size = 1;//bitrate/3;
+    int bufsize = ffmpeg_codec_context_->bit_rate/4;
+    ffmpeg_codec_context_->rc_buffer_size = bufsize;
     // prebuffering at decoder
-    //ffmpeg_codec_context_->rc_initial_buffer_occupancy = 1;//bitrate/3;
+    ffmpeg_codec_context_->rc_initial_buffer_occupancy = bufsize ;//bitrate/3;  
+
+    av_opt_set_int(ffmpeg_codec_context_->priv_data, "bufsize", bufsize, 0);
+  //  av_opt_set_int(ffmpeg_codec_context_->priv_data, "buf-initial", bufsize, 0);
+  //  av_opt_set_int(ffmpeg_codec_context_->priv_data, "buf-optimal", bufsize, 0);
+
     // buffer agressivity
     ffmpeg_codec_context_->rc_buffer_aggressivity = 0.5;
 

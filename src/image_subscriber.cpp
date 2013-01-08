@@ -41,8 +41,9 @@
 namespace ros_http_video_streamer
 {
 
-ImageSubscriber::ImageSubscriber(const std::string& topic) :
+ImageSubscriber::ImageSubscriber(const std::string& topic, const std::string& transport) :
     topic_(topic),
+    transport_(transport),
     nh(""),
     it(nh),
     sub(),
@@ -66,7 +67,7 @@ void ImageSubscriber::subscribe()
   boost::mutex::scoped_lock lock(frame_mutex_);
 
   sub.reset(new image_transport::SubscriberFilter());
-  sub->subscribe(it, topic_, 1, image_transport::TransportHints("raw"));
+  sub->subscribe(it, topic_, 1, image_transport::TransportHints(transport_));
   sub->registerCallback(boost::bind(&ImageSubscriber::image_cb, this, _1));
 
   emptyQueue();

@@ -49,8 +49,14 @@ namespace ros_http_video_streamer
 {
 
 FFMPEGEncoder::FFMPEGEncoder(const std::string& refID, const std::string& topic, const ServerConfiguration& config) :
-    doEncoding_(true), refID_(refID), topic_(topic), config_(config), subscriber_(topic), frameID_(0), init_(false), ffmpeg_(
-        0)
+    doEncoding_(true),
+    refID_(refID),
+    topic_(topic),
+    config_(config),
+    subscriber_(topic, config.ros_transport_),
+    frameID_(0),
+    init_(false),
+    ffmpeg_(0)
 {
   start();
 }
