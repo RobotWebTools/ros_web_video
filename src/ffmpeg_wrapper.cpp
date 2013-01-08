@@ -209,7 +209,7 @@ void FFMPEG_Wrapper::init(int input_width,
     ffmpeg_codec_context_->height = output_height_;
     ffmpeg_codec_context_->delay = 0;
 
-    ffmpeg_codec_context_->time_base.den = config_.framerate_+2; //increased framerate to compensate playback delay
+    ffmpeg_codec_context_->time_base.den = config_.framerate_+3; //increased framerate to compensate playback delay
     ffmpeg_codec_context_->time_base.num = 1;
     ffmpeg_codec_context_->gop_size = config_.gop_; /* emit one intra ffmpeg_frame_ every twelve frames at most */
     ffmpeg_codec_context_->pix_fmt = PIX_FMT_YUV420P;
@@ -224,18 +224,20 @@ void FFMPEG_Wrapper::init(int input_width,
     av_opt_set(ffmpeg_codec_context_->priv_data, "lag-in-frames", "1", 0);
     av_opt_set(ffmpeg_codec_context_->priv_data, "rc_lookahead", "1", 0);
 
+    av_opt_set(ffmpeg_codec_context_->priv_data, "drop_frame", "1", 0);
+
     // enable error-resilient coding
     av_opt_set(ffmpeg_codec_context_->priv_data, "error-resilient", "1", 0);
 
     // buffer size of rate controller (length: rc_buffer_size/bitrate * 1000) ms
-    int bufsize = ffmpeg_codec_context_->bit_rate/4;
+    int bufsize = 10;//ffmpeg_codec_context_->bit_rate/10;
     ffmpeg_codec_context_->rc_buffer_size = bufsize;
     // prebuffering at decoder
     ffmpeg_codec_context_->rc_initial_buffer_occupancy = bufsize ;//bitrate/3;  
 
     av_opt_set_int(ffmpeg_codec_context_->priv_data, "bufsize", bufsize, 0);
-  //  av_opt_set_int(ffmpeg_codec_context_->priv_data, "buf-initial", bufsize, 0);
-  //  av_opt_set_int(ffmpeg_codec_context_->priv_data, "buf-optimal", bufsize, 0);
+    av_opt_set_int(ffmpeg_codec_context_->priv_data, "buf-initial", bufsize, 0);
+    av_opt_set_int(ffmpeg_codec_context_->priv_data, "buf-optimal", bufsize, 0);
 
     // buffer agressivity
     ffmpeg_codec_context_->rc_buffer_aggressivity = 0.5;
@@ -410,12 +412,6 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
             (const uint8_t * const *)ffmpeg_src_picture_->data,
             ffmpeg_src_picture_->linesize, 0, input_height_, ffmpeg_dst_picture_->data, ffmpeg_dst_picture_->linesize);
 
-  if (ffmpeg_video_st_)
-      ffmpeg_video_pts_ = (double)ffmpeg_video_st_->pts.val * ffmpeg_video_st_->time_base.num /
-                  ffmpeg_video_st_->time_base.den;
-  else
-      ffmpeg_video_pts_ = 0.0;
-
   /* encode the image */
   AVPacket pkt;
   int got_output;
@@ -471,8 +467,12 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
 
   av_free_packet(&pkt);
 
+  AVRational timebase = ffmpeg_codec_context_->time_base;
+
+  timebase.den += 2; //increased framerate to compensate playback delay
+
   //ffmpeg_frame_->pts++;
-  ffmpeg_frame_->pts += av_rescale_q(1, ffmpeg_codec_context_->time_base, ffmpeg_video_st_->time_base);
+  ffmpeg_frame_->pts += av_rescale_q(1, timebase, ffmpeg_video_st_->time_base);
 }
 
 void FFMPEG_Wrapper::get_header(std::vector<uint8_t>& header)
