@@ -462,7 +462,7 @@ void connection::handleRead(const boost::system::error_code& e,
 
     if (result)
     {
-      ROS_INFO("Http request received from %s: %s", remote_ip.c_str(), request_.uri.c_str());
+      ROS_DEBUG("Http request received from %s: %s", remote_ip.c_str(), request_.uri.c_str());
 
       std::string request_path;
       // update list of available image topics
@@ -555,6 +555,7 @@ void connection::handleRead(const boost::system::error_code& e,
         if (!is)
         {
           reply_ = reply::stock_reply(reply::not_found);
+          ROS_INFO("Http request from client %s: %s - file not found ", remote_ip.c_str(), request_.uri.c_str(), full_path.c_str());
           return;
         }
 
