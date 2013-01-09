@@ -61,10 +61,10 @@ set_property(TARGET vpx PROPERTY
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx bz2 z)
 
 #common commands for building c++ executables and libraries 
-add_executable(webGLPointCloudTopicConverter tools/depth_to_webGL_pointclouds.cpp)                                       
-target_link_libraries(webGLPointCloudTopicConverter ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx bz2 z)    
+add_executable(webGL_pointcloud_image_encoder tools/depth_to_webGL_pointclouds.cpp)                                       
+target_link_libraries(webGL_pointcloud_image_encoder ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx bz2 z)    
 
-install(TARGETS ${PROJECT_NAME} webGLPointCloudTopicConverter
+install(TARGETS ${PROJECT_NAME} webGL_pointcloud_image_encoder
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
