@@ -472,7 +472,7 @@ protected:
 
 int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "webGLpointcloudTopicConverter");
+  ros::init(argc, argv, "webGL_pointcloud_image_encoder");
 
   DepthRGBEncoder depth_enc;
 
