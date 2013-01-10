@@ -146,8 +146,6 @@ private:
   // streaming control
   bool do_streaming_;
 
-  std::string doc_root_;
-
 };
 
 typedef boost::shared_ptr<connection> connection_ptr;
