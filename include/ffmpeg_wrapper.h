@@ -58,7 +58,7 @@
 namespace ros_http_video_streamer
 {
 
-
+// ffmpeg forward declarations
 class AVCodec;
 class AVOutputFormat;
 class AVCodecContext;
@@ -110,7 +110,7 @@ private:
   boost::mutex frame_mutex_;
   boost::mutex codec_mutex_;
 
-  // ffmpeg contexts & configurations
+  // ffmpeg contexts 
   AVCodec *ffmpeg_codec_;
   AVOutputFormat *ffmpeg_output_format_;
   AVCodecContext *ffmpeg_codec_context_;
@@ -122,8 +122,10 @@ private:
   double ffmpeg_video_pts_;
   struct SwsContext *ffmpeg_sws_ctx_;
 
+  // Server and codec configuration
   ServerConfiguration config_;
 
+  // image dimensions
   int input_width_;
   int input_height_;
   int output_width_;
