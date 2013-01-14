@@ -11,20 +11,18 @@
   
   <buildtool_depend>catkin</buildtool_depend>
   
+  <build_depend>bzip2</build_depend>  
   <build_depend>image_transport</build_depend>
-  <build_depend>libbz2-dev</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rostime</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>yasm</build_depend>
   <build_depend>zlib</build_depend>
-  <build_depend>bzip2</build_depend>  
 
+  <run_depend>bzip2</run_depend>
   <run_depend>image_transport</run_depend>
-  <run_depend>libbz2-dev</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rostime</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>zlib</run_depend>
-  <run_depend>bzip2</run_depend>
 </package>
