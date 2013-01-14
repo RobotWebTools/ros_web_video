@@ -56,7 +56,7 @@ class DepthRGBEncoder
 {
 public:
   DepthRGBEncoder() :
-    nh_(""),
+    nh_("~"),
     depth_it_(nh_),
     depth_sub_(),
     color_it_(nh_),
@@ -71,6 +71,9 @@ public:
     // read depth map topic from param server
     std::string rgb_image_topic;
     nh_.param<std::string>("rgb", rgb_image_topic, "/camera/rgb/image_color");
+
+    ROS_INFO_STREAM("Subscribing to depth map topic: "<<depthmap_topic);
+    ROS_INFO_STREAM("Subscribing to image topic: "<<rgb_image_topic);
 
     subscribe(depthmap_topic, rgb_image_topic);
 
@@ -115,7 +118,7 @@ public:
 
   void depth_with_color_cb(const sensor_msgs::ImageConstPtr& depth_msg, const sensor_msgs::ImageConstPtr& color_msg)
   {
-    ROS_INFO("Image depth/color pair received");
+    ROS_DEBUG("Image depth/color pair received");
     process(depth_msg, color_msg, crop_size_);
   }
 
@@ -469,7 +472,7 @@ protected:
 
 int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "webGLpointcloudTopicConverter");
+  ros::init(argc, argv, "webGL_pointcloud_image_encoder");
 
   DepthRGBEncoder depth_enc;
 

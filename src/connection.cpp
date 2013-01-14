@@ -87,6 +87,8 @@ struct mime_map
   { "html", "text/html" },
   { "jpg", "image/jpeg" },
   { "png", "image/png" },
+  { "css", "text/css" },
+  { "js", "text/javascript" },
   { 0, 0 } // Marks end of list.
 };
 
@@ -103,8 +105,7 @@ connection::connection(boost::asio::io_service& io_service,
     reply_(),
     encoder_manager_(encoder_manager),
     streaming_thread_(),
-    do_streaming_(false),
-    doc_root_("./www/")
+    do_streaming_(false)
 {
 }
 
@@ -462,7 +463,7 @@ void connection::handleRead(const boost::system::error_code& e,
 
     if (result)
     {
-      ROS_INFO("Http request received from %s: %s", remote_ip.c_str(), request_.uri.c_str());
+      ROS_DEBUG("Http request received from %s: %s", remote_ip.c_str(), request_.uri.c_str());
 
       std::string request_path;
       // update list of available image topics
@@ -550,11 +551,12 @@ void connection::handleRead(const boost::system::error_code& e,
         }
 
         // Open the file to send back.
-        std::string full_path = doc_root_ + request_path;
+        std::string full_path = server_conf_.wwwroot_ + request_path;
         std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
         if (!is)
         {
           reply_ = reply::stock_reply(reply::not_found);
+          ROS_INFO("Http request from client %s: %s - file not found ", remote_ip.c_str(), request_.uri.c_str(), full_path.c_str());
           return;
         }
 
