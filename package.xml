@@ -5,7 +5,7 @@
     This package encodes ROS image topics via ffmpeg and provides a video stream via http
     
   </description>
-  <author email="jkammerl@willowgarage.com">Armin Hornung</author>
+  <author email="jkammerl@willowgarage.com">Julius Kammerl</author>
   <maintainer email="jkammerl@willowgarage.com">Julius Kammerl</maintainer>
   <license>BSD</license>
   
@@ -16,10 +16,11 @@
   <build_depend>rostime</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>yasm</build_depend>
+  <build_depend>zlib</build_depend>
 
   <run_depend>image_transport</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rostime</run_depend>
   <run_depend>sensor_msgs</run_depend>
-
+  <run_depend>zlib</run_depend>
 </package>
