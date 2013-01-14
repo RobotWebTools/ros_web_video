@@ -4,8 +4,8 @@ project(ros_http_video_streamer)
 find_package(catkin REQUIRED roscpp rostime sensor_msgs image_transport)
 find_package(Boost COMPONENTS system filesystem thread REQUIRED)
 
-find_package(PkgConfig)
-pkg_check_modules(PC_ZLIB REQUIRED zlib)
+find_package ( BZip2 REQUIRED )
+find_package ( ZLIB REQUIRED )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
@@ -14,9 +14,9 @@ add_custom_command ( OUTPUT third_party_make
     COMMAND make  
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/ )
 
-include_directories(include ${PROJECT_SOURCE_DIR}/3rdparty/ffmpeg/ ${PC_ZLIB_INCLUDE_DIRS})
-link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${PC_ZLIB_LIBRARY_DIRS})
-add_definitions(${PC_ZLIB_CFLAGS_OTHER})
+include_directories(include ${PROJECT_SOURCE_DIR}/3rdparty/ffmpeg/ ${ZLIB_INCLUDE_DIRS} ${BZIP2_INCLUDE_DIR}) 
+link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${ZLIB_LIBRARY_DIRS} ${BZIP2_LIBRARY_DIR})
+add_definitions(${ZLIB_CFLAGS_OTHER} ${BZIP2_CFLAGS_OTHER})
 
 execute_process(COMMAND make WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/ )
 catkin_package(
@@ -62,12 +62,12 @@ set_property(TARGET vpx PROPERTY
 
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx
-bz2 ${PC_ZLIB_LIBRARIES})
+${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})
 
 #common commands for building c++ executables and libraries 
 add_executable(webGL_pointcloud_image_encoder tools/depth_to_webGL_pointclouds.cpp)                                       
 target_link_libraries(webGL_pointcloud_image_encoder ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx
-bz2 ${PC_ZLIB_LIBRARIES})    
+${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})    
 
 install(TARGETS ${PROJECT_NAME} webGL_pointcloud_image_encoder
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
