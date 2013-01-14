@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ros_http_video_streamer)
 
-find_package(catkin REQUIRED roscpp rostime sensor_msgs image_transport )
+find_package(catkin REQUIRED roscpp rostime sensor_msgs image_transport)
 find_package(Boost COMPONENTS system filesystem thread REQUIRED)
+
+find_package(PkgConfig)
+pkg_check_modules(PC_ZLIB REQUIRED zlib)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
@@ -11,9 +14,9 @@ add_custom_command ( OUTPUT third_party_make
     COMMAND make  
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/ )
 
-include_directories(include)
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/ffmpeg/)
-link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS})
+include_directories(include ${PROJECT_SOURCE_DIR}/3rdparty/ffmpeg/ ${PC_ZLIB_INCLUDE_DIRS})
+link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${PC_ZLIB_LIBRARY_DIRS})
+add_definitions(${PC_ZLIB_CFLAGS_OTHER})
 
 execute_process(COMMAND make WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/ )
 catkin_package(
@@ -58,11 +61,13 @@ set_property(TARGET vpx PROPERTY
              IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/libvpx/libvpx.a)
 
 
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx bz2 z)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx
+bz2 ${PC_ZLIB_LIBRARIES})
 
 #common commands for building c++ executables and libraries 
 add_executable(webGL_pointcloud_image_encoder tools/depth_to_webGL_pointclouds.cpp)                                       
-target_link_libraries(webGL_pointcloud_image_encoder ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx bz2 z)    
+target_link_libraries(webGL_pointcloud_image_encoder ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx
+bz2 ${PC_ZLIB_LIBRARIES})    
 
 install(TARGETS ${PROJECT_NAME} webGL_pointcloud_image_encoder
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
