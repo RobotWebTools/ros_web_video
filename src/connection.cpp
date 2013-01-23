@@ -125,6 +125,8 @@ void connection::sendHTTPStreamingHeaders()
 
   buffers.push_back(boost::asio::buffer(misc_strings::ok));
 
+#ifdef HTTP_HEADERS
+
   buffers.push_back(boost::asio::buffer("Date"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
 
@@ -132,7 +134,7 @@ void connection::sendHTTPStreamingHeaders()
   boost::posix_time::time_facet * p_time_output = new boost::posix_time::time_facet;
   std::locale special_locale (std::locale(""), p_time_output);
   datetime_ss.imbue (special_locale);
-  (*p_time_output).format("%a, %d %b %Y %H:%M:%S %z"); // date time
+  (*p_time_output).format("%a, %d %b %Y %H:%M:%S%F %z"); // date time
   datetime_ss << boost::posix_time::second_clock::local_time();
 
   buffers.push_back(boost::asio::buffer(datetime_ss.str().c_str()));
@@ -140,8 +142,9 @@ void connection::sendHTTPStreamingHeaders()
 
   buffers.push_back(boost::asio::buffer("Content-Type"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("video/webm; codecs=\"vp8.0, vorbis\""));
+  buffers.push_back(boost::asio::buffer("video/webm"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+
 
   buffers.push_back(boost::asio::buffer("Cache-Control"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
@@ -172,18 +175,20 @@ void connection::sendHTTPStreamingHeaders()
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("0"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-/*
+
   buffers.push_back(boost::asio::buffer("Trailer"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
   buffers.push_back(boost::asio::buffer("Expires"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-*/
 
-#ifdef HTTP_TRANSFER_ENCODING
-  buffers.push_back(boost::asio::buffer("Transfer-Encoding"));
-  buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("chunked"));
-  buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+
+  #ifdef HTTP_TRANSFER_ENCODING
+    buffers.push_back(boost::asio::buffer("Transfer-Encoding"));
+    buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
+    buffers.push_back(boost::asio::buffer("chunked"));
+    buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+  #endif
+
 #endif
 
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
