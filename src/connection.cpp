@@ -487,7 +487,7 @@ void connection::handleRead(const boost::system::error_code& e,
       {
         std::string request_topic = request_path.substr(strlen(STREAM_PATH));
 
-        std::string image_topic = request_topic.substr(0, request_topic.find(".webm?"));
+        std::string image_topic = request_topic.substr(0, request_topic.find(".webm"));
         std::string parameter_req = request_topic.substr(request_topic.find("?")+1);
 
         // check for requested stream
