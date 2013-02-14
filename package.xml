@@ -1,6 +1,6 @@
 <package>
   <name>ros_http_video_streamer</name>  
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <description>
     This package encodes ROS image topics via ffmpeg and provides a video stream via http
     
