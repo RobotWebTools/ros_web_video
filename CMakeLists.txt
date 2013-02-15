@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ros_http_video_streamer)
 
-find_package(catkin REQUIRED roscpp rostime sensor_msgs image_transport)
+find_package(catkin REQUIRED roscpp rostime sensor_msgs image_transport mk) 
 find_package(Boost COMPONENTS system filesystem thread REQUIRED)
 
 find_package ( BZip2 REQUIRED )
@@ -22,7 +22,7 @@ execute_process(COMMAND make WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/ )
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME} 
-  CATKIN_DEPENDS sensor_msgs image_transport roscpp rostime
+  CATKIN_DEPENDS sensor_msgs image_transport roscpp rostime mk
 )
 
 add_executable(${PROJECT_NAME}  src/ffmpeg_wrapper.cpp 
