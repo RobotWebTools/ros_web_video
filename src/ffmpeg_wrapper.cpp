@@ -124,6 +124,8 @@ static int ff_lockmgr(void **mutex, enum AVLockOp op)
     case AV_LOCK_DESTROY:
     {
       boost::mutex * m = static_cast<boost::mutex*>(*mutex);
+      m->lock();
+      m->unlock();
       delete m;
       break;
     }
