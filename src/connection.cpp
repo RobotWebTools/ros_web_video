@@ -207,57 +207,62 @@ void connection::streamingWorkerThread( const std::string& topic,
 
    std::vector<uint8_t> header;
 
-   image_encoder.initEncoding(header);
-
-   std::vector<boost::asio::const_buffer> buffers;
-   sendHTTPStreamingHeaders();
-
-#ifdef HTTP_TRANSFER_ENCODING
-   sprintf(hexSize, "%X", (unsigned int)header.size());
-   buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
-   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-#endif
-
-   buffers.push_back(boost::asio::buffer(header));
-#ifdef HTTP_TRANSFER_ENCODING
-   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-#endif
-
-   try {
-   boost::asio::write(socket_, buffers);
-   ROS_DEBUG("Video header sent (%d bytes)", (int) header.size());
-
-    std::vector < uint8_t > packet;
-
-    while (do_streaming_)
-    {
-      buffers.clear();
-      packet.clear();
-
-      image_encoder.getVideoPacket(packet);
-      ROS_DEBUG("Video packet sent (%d bytes)", (int) packet.size());
-
-#ifdef HTTP_TRANSFER_ENCODING
-      sprintf(hexSize, "%X", (unsigned int)packet.size());
-      buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
-      buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-#endif
-
-      buffers.push_back(boost::asio::buffer(packet));
-#ifdef HTTP_TRANSFER_ENCODING
-      buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-#endif
-
-      boost::asio::write(socket_, buffers);
-    }
-  }
-  catch (const boost::system::system_error& err)
+  if (image_encoder.initEncoding(header) >= 0)
   {
-    do_streaming_ = false;
+
+    std::vector<boost::asio::const_buffer> buffers;
+    sendHTTPStreamingHeaders();
+
+#ifdef HTTP_TRANSFER_ENCODING
+    sprintf(hexSize, "%X", (unsigned int)header.size());
+    buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
+    buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+#endif
+
+    buffers.push_back(boost::asio::buffer(header));
+#ifdef HTTP_TRANSFER_ENCODING
+    buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+#endif
+
+    try
+    {
+      boost::asio::write(socket_, buffers);
+      ROS_DEBUG("Video header sent (%d bytes)", (int) header.size());
+
+      std::vector<uint8_t> packet;
+
+      while (do_streaming_)
+      {
+        buffers.clear();
+        packet.clear();
+
+        image_encoder.getVideoPacket(packet);
+        ROS_DEBUG("Video packet sent (%d bytes)", (int) packet.size());
+
+#ifdef HTTP_TRANSFER_ENCODING
+        sprintf(hexSize, "%X", (unsigned int)packet.size());
+        buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
+        buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+#endif
+
+        buffers.push_back(boost::asio::buffer(packet));
+#ifdef HTTP_TRANSFER_ENCODING
+        buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+#endif
+
+        boost::asio::write(socket_, buffers);
+      }
+    }
+    catch (const boost::system::system_error& err)
+    {
+      do_streaming_ = false;
+    }
+
   }
 
    streaming_thread_.reset();
 
+   ROS_DEBUG("Video encoding thread endded");
 }
 
 void connection::getImageTopics()
@@ -299,7 +304,7 @@ void connection::generateImageTopicHTML()
     reply_.content += topic_name+">"+topic_name+"</a></p>";
   }
   reply_.content +=
-      "<a href=\"/webgl_pointcloud_streaming.html\">WebGL-based pointcloud decoder</a>"
+ //     "<a href=\"/webgl_pointcloud_streaming.html\">WebGL-based pointcloud decoder</a>"
       "</body>"
       "</html>";
 

@@ -67,7 +67,7 @@ public:
 
   // receive header data
   // this method blocks until the header data is availble from the codec
-  void initEncoding(std::vector<uint8_t>& buf);
+  int initEncoding(std::vector<uint8_t>& buf);
 
   // retrieve reverence string
   const std::string& getRefID();

@@ -37,6 +37,8 @@
 #include <stdio.h>
 #include <string>
 
+#include <set>
+
 #include "ffmpeg_wrapper.h"
 #include <boost/bind.hpp>
 
@@ -137,7 +139,7 @@ static int ff_lockmgr(void **mutex, enum AVLockOp op)
 
 
 
-void FFMPEG_Wrapper::init(int input_width,
+int FFMPEG_Wrapper::init(int input_width,
                           int input_height,
                           const ServerConfiguration& config)
 {
@@ -168,7 +170,7 @@ void FFMPEG_Wrapper::init(int input_width,
   // lookup webm codec
   avformat_alloc_output_context2(&ffmpeg_format_context_, NULL, config_.codec_.c_str(), NULL);
   if (!ffmpeg_format_context_) {
-    exit(1);
+    return -1;
   }
 
   ffmpeg_output_format_ = ffmpeg_format_context_->oformat;
@@ -183,15 +185,15 @@ void FFMPEG_Wrapper::init(int input_width,
     ffmpeg_codec_ = avcodec_find_encoder(ffmpeg_output_format_->video_codec);
     if (!(ffmpeg_codec_))
     {
-      fprintf(stderr, "Codec not found\n");
-      exit(1);
+      fprintf(stderr, "Codec not found (%s)\n",config_.codec_.c_str());
+      return -1;
     }
 
     ffmpeg_video_st_ = avformat_new_stream(ffmpeg_format_context_, ffmpeg_codec_);
     if (!ffmpeg_video_st_)
     {
       fprintf(stderr, "Could not alloc stream\n");
-      exit(1);
+      return -1;
     }
 
     ffmpeg_codec_context_ = ffmpeg_video_st_->codec;
@@ -266,7 +268,7 @@ void FFMPEG_Wrapper::init(int input_width,
          boost::mutex::scoped_lock lock(codec_mutex_);
          if (avcodec_open2(ffmpeg_codec_context_, ffmpeg_codec_, NULL) < 0) {
              fprintf(stderr, "Could not open video codec\n");
-             exit(1);
+             return -1;
          }
       }  
 
@@ -274,14 +276,14 @@ void FFMPEG_Wrapper::init(int input_width,
       ffmpeg_frame_ = avcodec_alloc_frame();
       if (!ffmpeg_frame_) {
           fprintf(stderr, "Could not allocate video ffmpeg_frame_\n");
-          exit(1);
+          return -1;
       }
 
       /* Allocate the encoded raw picture. */
       ret = avpicture_alloc(ffmpeg_dst_picture_, ffmpeg_codec_context_->pix_fmt, output_width_, output_height_);
       if (ret < 0) {
           fprintf(stderr, "Could not allocate picture\n");
-          exit(1);
+          return -1;
       }
 
       /* If the output format is not YUV420P, then a temporary YUV420P
@@ -290,7 +292,7 @@ void FFMPEG_Wrapper::init(int input_width,
           ret = avpicture_alloc(ffmpeg_src_picture_, AV_PIX_FMT_RGB24, input_width_, input_height_);
           if (ret < 0) {
               fprintf(stderr, "Could not allocate temporary picture\n");
-              exit(1);
+              return -1;
           }
 
       /* copy data and linesize picture pointers to ffmpeg_frame_ */
@@ -305,6 +307,8 @@ void FFMPEG_Wrapper::init(int input_width,
   }
 
   init_ = true;
+
+  return 0;
 }
 
 
@@ -406,7 +410,7 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
       if (!ffmpeg_sws_ctx_) {
           fprintf(stderr,
                   "Could not initialize the conversion context\n");
-          exit(1);
+          return;
       }
   }
 
@@ -425,7 +429,7 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
   if (avcodec_encode_video2(ffmpeg_codec_context_, &pkt, ffmpeg_frame_, &got_output) < 0)
   {
     fprintf(stderr, "Error encoding video ffmpeg_frame_\n");
-    exit(1);
+    return;
   }
 
   /* If size is zero, it means the image was buffered. */
@@ -451,7 +455,7 @@ void FFMPEG_Wrapper::encode_frame(uint8_t *image_data, std::vector<uint8_t>& enc
      if (av_write_frame(ffmpeg_format_context_, &pkt)) //av_write_frame
      {
      fprintf(stderr, "Error occurred when opening output file\n");
-     exit(1);
+     return;
      }
 
      size = avio_close_dyn_buf(ffmpeg_format_context_->pb, &output_buf);
@@ -497,7 +501,7 @@ void FFMPEG_Wrapper::get_header(std::vector<uint8_t>& header)
     if (avformat_write_header(ffmpeg_format_context_, NULL) < 0)
     {
       fprintf(stderr, "Error occurred when opening output file\n");
-      exit(1);
+      return;
     }
 
     //av_dict_free(&ffmpeg_format_context_->metadata);
@@ -526,7 +530,7 @@ void FFMPEG_Wrapper::get_trailer(std::vector<uint8_t>& trailer)
     if (av_write_trailer(ffmpeg_format_context_) < 0)
     {
       fprintf(stderr, "Error occurred when opening output file\n");
-      exit(1);
+      return;
     }
 
     size = avio_close_dyn_buf(ffmpeg_format_context_->pb, &output_buf);

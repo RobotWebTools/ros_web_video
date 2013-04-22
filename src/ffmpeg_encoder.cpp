@@ -40,6 +40,8 @@
 #include "ffmpeg_encoder.h"
 #include "image_subscriber.h"
 
+#include "boost/date_time/posix_time/posix_time.hpp" //include all types plus i/o
+
 #define MAX_DEPTH 4.0
 #define RAW_DEPTH_IMAGE_RESOLUTION 512
 
@@ -149,11 +151,13 @@ void FFMPEGEncoder::convertFloatingPointImageToMono8(float* input, const std::si
   }
 }
 
-void FFMPEGEncoder::initEncoding(std::vector<uint8_t>& header)
+int FFMPEGEncoder::initEncoding(std::vector<uint8_t>& header)
 {
   sensor_msgs::ImageConstPtr frame;
 
-  while (!init_)
+  boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();;
+
+  while (!init_ && (boost::posix_time::time_duration(boost::posix_time::microsec_clock::local_time()-start).total_seconds()<5.0))
   {
     // get frame from ROS iamge subscriber
     subscriber_.getImageFromQueue(frame);
@@ -164,17 +168,19 @@ void FFMPEGEncoder::initEncoding(std::vector<uint8_t>& header)
       ffmpeg_ = new FFMPEG_Wrapper();
 
       // first input frame defines resolution
-      ffmpeg_->init(frame->width, frame->height, config_);
+      if (ffmpeg_ && ffmpeg_->init(frame->width, frame->height, config_)>=0 )
+      {
 
-      // retrieve header data from ffmpeg wrapper
-      ffmpeg_->get_header(header);
+        // retrieve header data from ffmpeg wrapper
+        ffmpeg_->get_header(header);
 
-      ROS_DEBUG("Codec header received: %d bytes", (int)header.size());
+        ROS_DEBUG("Codec header received: %d bytes", (int)header.size());
 
-      subscriber_.emptyQueue();
+        subscriber_.emptyQueue();
 
-      // FFMPEG initialized
-      init_ = true;
+        // FFMPEG initialized
+        init_ = true;
+      }
 
     }
     else
@@ -182,6 +188,8 @@ void FFMPEGEncoder::initEncoding(std::vector<uint8_t>& header)
       boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     }
   }
+
+  return init_?0:-1;
 }
 
 void FFMPEGEncoder::getVideoPacket(std::vector<uint8_t>& buf)

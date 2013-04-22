@@ -77,7 +77,7 @@ public:
   ~FFMPEG_Wrapper();
 
   // initialize ffmpeg coding
-  void init(int input_width,
+  int  init(int input_width,
             int input_height,
             const ServerConfiguration& config);
 
