@@ -51,6 +51,7 @@ void showConfig(const ros_http_video_streamer::ServerConfiguration& config)
   std::cout << "        Bitrate: " << config.bitrate_ << std::endl;
   std::cout << "        Framerate: " << config.framerate_ << std::endl;
   std::cout << "        Codec profile: " << config.profile_ << std::endl;
+  std::cout << "        Fileserver enabled: " << config.www_file_server_ << std::endl;
   std::cout << "        Fileserver Root: " << config.wwwroot_ << std::endl;
 }
 
@@ -90,6 +91,9 @@ int main(int argc, char* argv[])
 
   // read default ROS transport scheme
   priv_nh_.param<std::string>("transport", server_conf.ros_transport_, server_conf.ros_transport_);
+
+  // read default encoding profile from param server
+  priv_nh_.param<bool>("www_file_server", server_conf.www_file_server_, server_conf.www_file_server_);
 
   showConfig(server_conf);
 

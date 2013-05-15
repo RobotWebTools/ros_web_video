@@ -54,7 +54,8 @@ struct ServerConfiguration
       frame_height_(-1),
       profile_("realtime"),
       wwwroot_("./www"),
-      ros_transport_("raw")
+      ros_transport_("raw"),
+      www_file_server_(false)
   {
   }
 
@@ -89,7 +90,8 @@ struct ServerConfiguration
   std::string wwwroot_;
   // ros transport
   std::string ros_transport_;
-
+  // enable www file server
+  bool www_file_server_;
 };
 
 } // ros_http_video_streamer
