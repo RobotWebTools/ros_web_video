@@ -551,35 +551,44 @@ void connection::handleRead(const boost::system::error_code& e,
       } else
       {
 
-        // Determine the file extension.
-        std::size_t last_slash_pos = request_path.find_last_of("/");
-        std::size_t last_dot_pos = request_path.find_last_of(".");
-        std::string extension;
-        if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos)
-        {
-          extension = request_path.substr(last_dot_pos + 1);
-        }
+        if (server_conf_.www_file_server_)
+        {        // Determine the file extension.
+          std::size_t last_slash_pos = request_path.find_last_of("/");
+          std::size_t last_dot_pos = request_path.find_last_of(".");
+          std::string extension;
+          if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos)
+          {
+            extension = request_path.substr(last_dot_pos + 1);
+          }
 
-        // Open the file to send back.
-        std::string full_path = server_conf_.wwwroot_ + request_path;
-        std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
-        if (!is)
-        {
-          reply_ = reply::stock_reply(reply::not_found);
-          ROS_INFO("Http request from client %s: %s - file not found ", remote_ip.c_str(), request_.uri.c_str(), full_path.c_str());
-          return;
-        }
+          // Open the file to send back.
+          std::string full_path = server_conf_.wwwroot_ + request_path;
+          std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
+          if (!is)
+          {
+            reply_ = reply::stock_reply(reply::not_found);
+            ROS_INFO("Http request from client %s: %s - file not found ", remote_ip.c_str(), request_.uri.c_str(), full_path.c_str());
+            return;
+          }
 
-        // Fill out the reply to be sent to the client.
-        reply_.status = reply::ok;
-        char buf[2048];
-        while (is.read(buf, sizeof(buf)).gcount() > 0)
-          reply_.content.append(buf, is.gcount());
-        reply_.headers.resize(2);
-        reply_.headers[0].name = "Content-Length";
-        reply_.headers[0].value = boost::lexical_cast < std::string > (reply_.content.size());
-        reply_.headers[1].name = "Content-Type";
-        reply_.headers[1].value = mimeExtensionToType(extension);
+          // Fill out the reply to be sent to the client.
+          reply_.status = reply::ok;
+          char buf[2048];
+          while (is.read(buf, sizeof(buf)).gcount() > 0)
+            reply_.content.append(buf, is.gcount());
+          reply_.headers.resize(2);
+          reply_.headers[0].name = "Content-Length";
+          reply_.headers[0].value = boost::lexical_cast < std::string > (reply_.content.size());
+          reply_.headers[1].name = "Content-Type";
+          reply_.headers[1].value = mimeExtensionToType(extension);
+        } else
+        {
+          reply_ = reply::stock_reply(reply::forbidden);
+          boost::asio::async_write(socket_, reply_.to_buffers(),
+              strand_.wrap(
+                boost::bind(&connection::handleWrite, shared_from_this(),
+                  boost::asio::placeholders::error)));
+        }
       }
 
   //    request_handler_.handle_request(request_path, reply_);
