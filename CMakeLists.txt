@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ros_http_video_streamer)
+project(ros_web_video)
 
 find_package(catkin REQUIRED roscpp rostime sensor_msgs image_transport mk) 
 find_package(Boost COMPONENTS system filesystem thread REQUIRED)
@@ -36,7 +36,6 @@ add_executable(${PROJECT_NAME}  src/ffmpeg_wrapper.cpp
                                 src/ffmpeg_encoder.cpp
                                 )
 
-
 add_library(avcodec STATIC IMPORTED)
 set_property(TARGET avcodec PROPERTY
             IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/ffmpeg/libavcodec/libavcodec.a)
@@ -60,7 +59,6 @@ set_property(TARGET swscale PROPERTY
 add_library(vpx STATIC IMPORTED)  
 set_property(TARGET vpx PROPERTY
              IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/libvpx/libvpx.a)
-
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} avcodec avformat avutil avfilter swscale vpx
 ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})
