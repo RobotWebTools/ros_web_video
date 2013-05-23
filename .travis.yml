@@ -15,7 +15,7 @@ install:
   - sudo rosdep init
   - rosdep update 
   - mkdir -p /tmp/ws/src
-  - ln -s `pwd` /tmp/ws/src/robot_web_video
+  - ln -s `pwd` /tmp/ws/src/tf2_web_republisher
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro groovy -y
 
