@@ -28,7 +28,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 include_directories(include
-  ${PROJECT_SOURCE_DIR}/3rdparty/sources/ffmpeg/
+  ${PROJECT_SOURCE_DIR}/FFmpeg/
   ${catkin_INCLUDE_DIRS} 
   ${Boost_INCLUDE_DIRS}
   ${ZLIB_INCLUDE_DIRS}
@@ -48,7 +48,7 @@ add_definitions(
 )
 
 ## Setup FFmpeg
-execute_process(COMMAND make WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/ )
+execute_process(COMMAND make WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/FFmpeg/ )
 
 ## Declare a cpp executables and libraries
 add_executable(${PROJECT_NAME}
