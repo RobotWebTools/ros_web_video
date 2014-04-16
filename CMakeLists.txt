@@ -47,8 +47,25 @@ add_definitions(
   ${BZIP2_CFLAGS_OTHER}
 )
 
+## Setup libvpx
+execute_process(
+  COMMAND ./configure --enable-vp8
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/libvpx/
+)
+execute_process(
+  COMMAND make
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/libvpx/
+)
+
 ## Setup FFmpeg
-execute_process(COMMAND make WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/FFmpeg/ )
+execute_process(
+  COMMAND ./configure --enable-libvpx --extra-cflags="-I../libvpx" --extra-ldflags="-L../libvpx" --enable-gpl
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/FFmpeg/
+)
+execute_process(
+  COMMAND make WORKING_DIRECTORY
+  ${PROJECT_SOURCE_DIR}/FFmpeg/
+)
 
 ## Declare a cpp executables and libraries
 add_executable(${PROJECT_NAME}
@@ -64,32 +81,32 @@ add_executable(${PROJECT_NAME}
 
 add_library(avcodec STATIC IMPORTED)
 set_property(TARGET avcodec
-  PROPERTY IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/ffmpeg/libavcodec/libavcodec.a
+  PROPERTY IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/FFmpeg/libavcodec/libavcodec.a
 )
 
 add_library(avformat STATIC IMPORTED)
 set_property(TARGET avformat PROPERTY
-  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/ffmpeg/libavformat/libavformat.a
+  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/FFmpeg/libavformat/libavformat.a
 )
            
 add_library(avutil STATIC IMPORTED)  
 set_property(TARGET avutil PROPERTY
-  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/ffmpeg/libavutil/libavutil.a
+  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/FFmpeg/libavutil/libavutil.a
 )
 
 add_library(avfilter STATIC IMPORTED)  
 set_property(TARGET avfilter PROPERTY
-  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/ffmpeg/libavfilter/libavfilter.a
+  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/FFmpeg/libavfilter/libavfilter.a
 )
              
 add_library(swscale STATIC IMPORTED)  
 set_property(TARGET swscale PROPERTY
-  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/ffmpeg/libswscale/libswscale.a
+  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/FFmpeg/libswscale/libswscale.a
 )
              
 add_library(vpx STATIC IMPORTED)  
 set_property(TARGET vpx PROPERTY
-  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/3rdparty/sources/libvpx/libvpx.a
+  IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/libvpx/libvpx.a
 )
 
 target_link_libraries(${PROJECT_NAME}
