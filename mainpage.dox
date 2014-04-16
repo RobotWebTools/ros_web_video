@@ -1,0 +1,7 @@
+/**
+\mainpage
+
+\b Streaming of ROS Image Topics via HTTP
+This package is typically used to stream encoded point cloud messages to a web browser for use in ros3djs.
+*/
+
