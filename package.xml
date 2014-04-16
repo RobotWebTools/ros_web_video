@@ -1,13 +1,16 @@
 <package>
   <name>ros_web_video</name>  
   <version>0.1.6</version>
-  <description>
-    This package encodes ROS image topics via ffmpeg and provides a video stream via http
-    
-  </description>
-  <author email="jkammerl@willowgarage.com">Julius Kammerl</author>
-  <maintainer email="jkammerl@willowgarage.com">Julius Kammerl</maintainer>
+  <description>Streaming of ROS Image Topics via HTTP</description>
+
+  <maintainer email="rctoris@wpi.edu">Russell Toris</maintainer>
+  <author email="jkammerl@willowgarage.com">Julius Kammer</author>
+
   <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/ros_web_video</url>
+  <url type="bugtracker">https://github.com/RobotWebTools/ros_web_video/issues</url>
+  <url type="repository">https://github.com/RobotWebTools/ros_web_video</url>
   
   <buildtool_depend>catkin</buildtool_depend>
   
