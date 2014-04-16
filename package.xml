@@ -1,6 +1,6 @@
 <package>
   <name>ros_web_video</name>  
-  <version>0.1.6</version>
+  <version>0.1.7</version>
   <description>Streaming of ROS Image Topics via HTTP</description>
 
   <maintainer email="rctoris@wpi.edu">Russell Toris</maintainer>
