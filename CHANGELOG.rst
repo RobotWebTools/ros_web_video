@@ -2,6 +2,25 @@
 Changelog for package ros_web_video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.10 (2014-04-17)
+-------------------
+* ignores downloads
+* Remove submodule entry
+* modules removed
+* submodules being weird
+* Contributors: Russell Toris
+
+0.1.9 (2014-04-17)
+------------------
+* build now downloads deps
+* Contributors: Russell Toris
+
+0.1.8 (2014-04-17)
+------------------
+* submodule now in correct directory
+* travis now runs hydro and groovy and submodules now initilized in build
+* Contributors: Russell Toris
+
 0.1.7 (2014-04-16)
 ------------------
 * submodule moved to HTTPS
