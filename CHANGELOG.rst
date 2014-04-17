@@ -2,6 +2,11 @@
 Changelog for package ros_web_video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.9 (2014-04-17)
+------------------
+* build now downloads deps
+* Contributors: Russell Toris
+
 0.1.8 (2014-04-17)
 ------------------
 * submodule now in correct directory
