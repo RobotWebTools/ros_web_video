@@ -47,6 +47,11 @@ add_definitions(
   ${BZIP2_CFLAGS_OTHER}
 )
 
+## Grab external libraries
+execute_process(
+  COMMAND git submodule update --init --recursive
+)
+
 ## Setup libvpx
 execute_process(
   COMMAND ./configure --enable-vp8
