@@ -49,8 +49,20 @@ add_definitions(
 
 ## Grab external libraries
 execute_process(
-  COMMAND git submodule update --init --recursive
+  COMMAND git clone https://chromium.googlesource.com/webm/libvpx
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+)
+execute_process(
+  COMMAND git checkout v1.2.0
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/libvpx
+)
+execute_process(
+  COMMAND git clone https://github.com/FFmpeg/FFmpeg.git
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+)
+execute_process(
+  COMMAND git checkout n1.1
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/FFmpeg
 )
 
 ## Setup libvpx
