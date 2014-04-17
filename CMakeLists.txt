@@ -50,6 +50,7 @@ add_definitions(
 ## Grab external libraries
 execute_process(
   COMMAND git submodule update --init --recursive
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
 )
 
 ## Setup libvpx
