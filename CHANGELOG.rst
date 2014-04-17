@@ -2,6 +2,14 @@
 Changelog for package ros_web_video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.10 (2014-04-17)
+-------------------
+* ignores downloads
+* Remove submodule entry
+* modules removed
+* submodules being weird
+* Contributors: Russell Toris
+
 0.1.9 (2014-04-17)
 ------------------
 * build now downloads deps
