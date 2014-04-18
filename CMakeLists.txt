@@ -49,6 +49,10 @@ add_definitions(
 
 ## Grab external libraries
 execute_process(
+  git config --global http.sslVerify false
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+)
+execute_process(
   COMMAND git clone https://chromium.googlesource.com/webm/libvpx
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
 )
