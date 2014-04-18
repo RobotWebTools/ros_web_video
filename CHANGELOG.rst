@@ -2,6 +2,11 @@
 Changelog for package ros_web_video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.11 (2014-04-18)
+-------------------
+* CA-cert fix
+* Contributors: Russell Toris
+
 0.1.10 (2014-04-17)
 -------------------
 * ignores downloads
