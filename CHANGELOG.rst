@@ -2,6 +2,13 @@
 Changelog for package ros_web_video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.12 (2014-04-21)
+-------------------
+* travis speed fix
+* resets SSL flag in cmake
+* travis updated to remove external gits
+* Contributors: Russell Toris
+
 0.1.11 (2014-04-18)
 -------------------
 * CA-cert fix
