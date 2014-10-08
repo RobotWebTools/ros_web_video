@@ -2,6 +2,14 @@
 Changelog for package ros_web_video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.13 (2014-10-08)
+-------------------
+* Merge pull request #6 from mitchellwills/develop
+  Fix ros_web_video  HTTP header generation
+* Fixed ROS_INFO argument mismatch
+* Fixed HTTP Header generation
+* Contributors: Mitchell Wills, Russell Toris
+
 0.1.12 (2014-04-21)
 -------------------
 * travis speed fix
