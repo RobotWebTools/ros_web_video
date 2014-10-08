@@ -56,6 +56,8 @@
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
 
+#define HTTP_TRANSFER_ENCODING
+
 namespace ros_http_video_streamer
 {
 
@@ -118,14 +120,20 @@ connection::~connection()
 
 }
 
+// Create an asio buffer containing the contents of a c string
+// This method stores all type bytes of the string excluding the null terminator
+// Passing a c string to the buffer function creates a buffer that includs the null terminator
+static boost::asio::const_buffer create_cstr_asio_buffer(const char* c_str)
+{
+  return boost::asio::buffer(c_str, strlen(c_str));
+}
+
 // send http headers for data streaming
 void connection::sendHTTPStreamingHeaders()
 {
   std::vector<boost::asio::const_buffer> buffers;
 
   buffers.push_back(boost::asio::buffer(misc_strings::ok));
-
-#ifdef HTTP_HEADERS
 
   buffers.push_back(boost::asio::buffer("Date"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
@@ -137,59 +145,57 @@ void connection::sendHTTPStreamingHeaders()
   (*p_time_output).format("%a, %d %b %Y %H:%M:%S%F %z"); // date time
   datetime_ss << boost::posix_time::second_clock::local_time();
 
-  buffers.push_back(boost::asio::buffer(datetime_ss.str().c_str()));
+  buffers.push_back(boost::asio::buffer(datetime_ss.str()));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-  buffers.push_back(boost::asio::buffer("Content-Type"));
+  buffers.push_back(create_cstr_asio_buffer("Content-Type"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("video/webm"));
+  buffers.push_back(create_cstr_asio_buffer("video/webm"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
 
-  buffers.push_back(boost::asio::buffer("Cache-Control"));
+  buffers.push_back(create_cstr_asio_buffer("Cache-Control"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("no-cache"));
+  buffers.push_back(create_cstr_asio_buffer("no-cache"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-  buffers.push_back(boost::asio::buffer("Connection"));
+  buffers.push_back(create_cstr_asio_buffer("Connection"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("Close"));
+  buffers.push_back(create_cstr_asio_buffer("Close"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-  buffers.push_back(boost::asio::buffer("Access-Control-Allow-Origin"));
+  buffers.push_back(create_cstr_asio_buffer("Access-Control-Allow-Origin"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("*"));
+  buffers.push_back(create_cstr_asio_buffer("*"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-  buffers.push_back(boost::asio::buffer("Pragma"));
+  buffers.push_back(create_cstr_asio_buffer("Pragma"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("no-cache"));
+  buffers.push_back(create_cstr_asio_buffer("no-cache"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-  buffers.push_back(boost::asio::buffer("Expires"));
+  buffers.push_back(create_cstr_asio_buffer("Expires"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("0"));
+  buffers.push_back(create_cstr_asio_buffer("0"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-  buffers.push_back(boost::asio::buffer("Max-Age"));
+  buffers.push_back(create_cstr_asio_buffer("Max-Age"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("0"));
+  buffers.push_back(create_cstr_asio_buffer("0"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-  buffers.push_back(boost::asio::buffer("Trailer"));
+  buffers.push_back(create_cstr_asio_buffer("Trailer"));
   buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-  buffers.push_back(boost::asio::buffer("Expires"));
+  buffers.push_back(create_cstr_asio_buffer("Expires"));
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
 
   #ifdef HTTP_TRANSFER_ENCODING
-    buffers.push_back(boost::asio::buffer("Transfer-Encoding"));
+    buffers.push_back(create_cstr_asio_buffer("Transfer-Encoding"));
     buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-    buffers.push_back(boost::asio::buffer("chunked"));
+    buffers.push_back(create_cstr_asio_buffer("chunked"));
     buffers.push_back(boost::asio::buffer(misc_strings::crlf));
   #endif
-
-#endif
 
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
@@ -215,7 +221,7 @@ void connection::streamingWorkerThread( const std::string& topic,
 
 #ifdef HTTP_TRANSFER_ENCODING
     sprintf(hexSize, "%X", (unsigned int)header.size());
-    buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
+    buffers.push_back(create_cstr_asio_buffer(hexSize));
     buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 #endif
 
@@ -241,7 +247,7 @@ void connection::streamingWorkerThread( const std::string& topic,
 
 #ifdef HTTP_TRANSFER_ENCODING
         sprintf(hexSize, "%X", (unsigned int)packet.size());
-        buffers.push_back(boost::asio::buffer(hexSize, strlen(hexSize)));
+        buffers.push_back(create_cstr_asio_buffer(hexSize));
         buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 #endif
 
