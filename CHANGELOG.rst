@@ -2,6 +2,11 @@
 Changelog for package ros_web_video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.14 (2014-10-30)
+-------------------
+* DEPRECATION NOTICE
+* Contributors: Russell Toris
+
 0.1.13 (2014-10-08)
 -------------------
 * Merge pull request #6 from mitchellwills/develop
