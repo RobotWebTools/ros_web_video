@@ -59,6 +59,9 @@ int main(int argc, char* argv[])
 {
   ros::init(argc, argv, "ROS_Http_Video_Streamer");
 
+  ROS_WARN("WARNING -- ros_web_video IS NOW DEPRECATED.");
+  ROS_WARN("PLEASE SEE https://github.com/RobotWebTools/web_video_server.");
+
   // Default server configuration
   ros_http_video_streamer::ServerConfiguration server_conf;
 

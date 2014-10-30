@@ -49,7 +49,7 @@ add_definitions(
 
 ## Grab external libraries
 execute_process(
-  git config --global http.sslVerify false
+  COMMAND git config --global http.sslVerify false
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
 )
 execute_process(
@@ -67,6 +67,10 @@ execute_process(
 execute_process(
   COMMAND git checkout n1.1
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/FFmpeg
+)
+execute_process(
+  COMMAND git config --global http.sslVerify true
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
 )
 
 ## Setup libvpx
