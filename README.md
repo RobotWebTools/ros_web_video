@@ -1,3 +1,6 @@
+## DEPRECATION NOTICE
+ros_web_video has been replaced by [web_video_server](https://github.com/RobotWebTools/web_video_server).
+
 ros_web_video [![Build Status](https://api.travis-ci.org/RobotWebTools/ros_web_video.png)](https://travis-ci.org/RobotWebTools/ros_web_video)
 =============
 
